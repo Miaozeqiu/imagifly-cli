@@ -1,0 +1,50 @@
+{
+  "name": "@imagifly/cli",
+  "version": "0.1.0",
+  "description": "Agent-first CLI for the Imagifly image and video API",
+  "type": "module",
+  "bin": {
+    "imagifly": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "docs",
+    "skills"
+  ],
+  "scripts": {
+    "build": "tsc && chmod +x dist/cli.js",
+    "prepublishOnly": "npm run build",
+    "test": "npm run build && node --test test/cli.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Miaozeqiu/imagifly-cli.git"
+  },
+  "homepage": "https://imagifly.net",
+  "bugs": {
+    "url": "https://github.com/Miaozeqiu/imagifly-cli/issues"
+  },
+  "keywords": [
+    "imagifly",
+    "cli",
+    "ai",
+    "image",
+    "video"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^14.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.0",
+    "typescript": "^5.9.3"
+  }
+}
