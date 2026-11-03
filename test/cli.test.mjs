@@ -182,7 +182,12 @@ test("package metadata and docs", async () => {
   const skill = await readFile("skills/imagifly-cli/SKILL.md", "utf8");
   assert.match(skill, /npm install -g @imagifly\/cli/);
   assert.doesNotMatch(skill, /claude mcp add|mcp\.json/);
-  assert.match(await readFile("docs/cli-setup.md", "utf8"), /imagifly auth login --key/);
+  const setup = await readFile("docs/cli-setup.md", "utf8");
+  assert.match(setup, /imagifly auth login --key/);
+  assert.match(setup, /只需输出以下内容/);
+  const successLine = "Imagifly CLI 已安装并登录成功，可以用来生成图片和视频了";
+  assert.match(setup, new RegExp(successLine));
+  assert.match(skill, new RegExp(successLine));
   const license = await readFile("LICENSE", "utf8");
   assert.match(license, /MIT License/);
 });
