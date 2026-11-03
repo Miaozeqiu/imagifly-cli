@@ -38,14 +38,19 @@ export async function login(options: {
   const verifier = randomBytes(32).toString("base64url");
   const challenge = createHash("sha256").update(verifier).digest("base64url");
   const state = randomBytes(16).toString("base64url");
-  const callback = await listenForCallback(timeoutSeconds);
+  const agentName = readAgentName(options.agent);
+  const callback = await listenForCallback({
+    timeoutSeconds,
+    agentName,
+    continueOrigin: resolveSiteOrigin(),
+  });
   const authorizeUrl = new URL("/oauth/authorize", `${resolveSiteOrigin()}/`);
   authorizeUrl.searchParams.set("client_id", CLIENT_ID);
   authorizeUrl.searchParams.set("redirect_uri", callback.redirectUri);
   authorizeUrl.searchParams.set("state", state);
   authorizeUrl.searchParams.set("code_challenge", challenge);
   authorizeUrl.searchParams.set("code_challenge_method", "S256");
-  authorizeUrl.searchParams.set("agent", readAgentName(options.agent));
+  authorizeUrl.searchParams.set("agent", agentName);
 
   progress(`callback ${callback.redirectUri}`);
   progress(`Open ${authorizeUrl.toString()}`);
@@ -141,7 +146,15 @@ export async function status(): Promise<void> {
   });
 }
 
-function listenForCallback(timeoutSeconds: number) {
+function listenForCallback({
+  timeoutSeconds,
+  agentName,
+  continueOrigin,
+}: {
+  timeoutSeconds: number;
+  agentName: string;
+  continueOrigin: string;
+}) {
   return new Promise<{
     redirectUri: string;
     wait: () => Promise<{ code?: string; error?: string; state?: string }>;
@@ -165,8 +178,12 @@ function listenForCallback(timeoutSeconds: number) {
         res.end();
         return;
       }
-      const html =
-        "<!doctype html><html><body style=\"font-family:sans-serif;padding:40px\">You can close this tab and return to the terminal.</body></html>";
+      const denied = Boolean(url.searchParams.get("error"));
+      const html = callbackPageHtml({
+        denied,
+        agentName,
+        continueUrl: buildCompleteUrl(continueOrigin, denied, agentName),
+      });
       res.writeHead(200, {
         "content-type": "text/html; charset=utf-8",
         connection: "close",
@@ -202,6 +219,87 @@ function listenForCallback(timeoutSeconds: number) {
       });
     });
   });
+}
+
+function buildCompleteUrl(origin: string, denied: boolean, agentName: string) {
+  const next = new URL("/oauth/complete", `${origin}/`);
+  next.searchParams.set("result", denied ? "denied" : "approved");
+  next.searchParams.set("agent", agentName);
+  return next.toString();
+}
+
+function escapeHtml(value: string) {
+  return value.replace(/[&<>"']/g, (character) => {
+    switch (character) {
+      case "&":
+        return "&amp;";
+      case "<":
+        return "&lt;";
+      case ">":
+        return "&gt;";
+      case '"':
+        return "&quot;";
+      default:
+        return "&#39;";
+    }
+  });
+}
+
+function callbackPageHtml({
+  denied,
+  agentName,
+  continueUrl,
+}: {
+  denied: boolean;
+  agentName: string;
+  continueUrl: string;
+}) {
+  const title = denied ? "已拒绝授权 · Request denied" : "授权成功 · Authorization complete";
+  const heading = denied ? "已拒绝授权" : "授权成功";
+  const headingEn = denied ? "Request denied" : "Authorization complete";
+  const lead = denied
+    ? `${escapeHtml(agentName)} 没有获得访问令牌。`
+    : `${escapeHtml(agentName)} 现在可以用你的 Imagifly 账号生成图片和视频。`;
+  const hint = denied
+    ? "可以关掉这个标签页。如需重新授权，再运行一次 imagifly auth login。"
+    : "可以关掉这个标签页，回到你的 Agent 或终端。它会从那里继续完成配置。";
+  const safeContinue = escapeHtml(continueUrl);
+
+  return `<!doctype html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="refresh" content="0;url=${safeContinue}">
+  <title>${escapeHtml(title)}</title>
+  <style>
+    :root { color-scheme: light; }
+    body { margin: 0; min-height: 100vh; background: #fff; color: #1f1f1f; font-family: Arial, Helvetica, sans-serif; }
+    main { box-sizing: border-box; max-width: 36rem; margin: 0 auto; padding: 4rem 1.25rem; }
+    .mark { display: flex; width: 3rem; height: 3rem; align-items: center; justify-content: center; border-radius: 1rem; background: #f5f7fa; font-size: 1.25rem; }
+    h1 { margin: 1.25rem 0 0; font-size: 1.875rem; font-weight: 300; letter-spacing: -0.02em; color: #000; }
+    .en { margin: 0.35rem 0 0; font-size: 0.875rem; color: #6b6b6b; }
+    .card { margin-top: 2rem; padding: 1.25rem; border-radius: 1.25rem; background: #f5f7fa; }
+    p { margin: 0; font-size: 0.875rem; line-height: 1.6; }
+    .hint { margin-top: 0.75rem; color: #6b6b6b; }
+    a { color: #0070cc; text-decoration: none; }
+    a:hover { color: #1883fd; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="mark" aria-hidden="true">${denied ? "×" : "✓"}</div>
+    <h1>${heading}</h1>
+    <p class="en">${headingEn}</p>
+    <div class="card">
+      <p>${lead}</p>
+      <p class="hint">${hint}</p>
+      <p class="hint"><a href="${safeContinue}">继续 / Continue</a></p>
+    </div>
+  </main>
+  <script>location.replace(${JSON.stringify(continueUrl)});</script>
+</body>
+</html>`;
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
