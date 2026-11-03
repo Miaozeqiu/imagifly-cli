@@ -2,8 +2,8 @@
 name: imagifly-cli
 description: >-
   Operate Imagifly image and video generation from the shell with the official
-  CLI (@imagifly/cli, binary imagifly). Use when installing the CLI, saving an
-  API key, listing models, generating or downloading images and videos, or
+  CLI (@imagifly/cli, binary imagifly). Use when installing the CLI, signing in
+  with OAuth, listing models, generating or downloading images and videos, or
   reading JSON results. Do not use for MCP server setup.
 ---
 
@@ -22,23 +22,27 @@ npm install -g @imagifly/cli
 imagifly --version
 ```
 
-The npm package is `@imagifly/cli`. The command is `imagifly`. This package ships the same skill at `skills/imagifly-cli/SKILL.md`. Agent setup steps: [docs/cli-setup.md](../../docs/cli-setup.md).
+The npm package is `@imagifly/cli`. The command is `imagifly`. This package ships the same skill at `skills/imagifly-cli/SKILL.md`. Agent setup steps: https://imagifly.net/cli/setup.md
 
 When the user asked only to install or configure the CLI, follow that guide. After `imagifly +me` exits 0, reply with the short success block in Verify below. Do not narrate the install.
 
 ## Auth
 
-Ask once for an API key if you do not already have one (https://imagifly.net, key looks like `imf_...`). Then save it without echoing it back:
+Run login and tell the user to click Allow in the browser:
 
 ```bash
-imagifly auth login --key imf_...
+imagifly auth login --agent Cursor
 imagifly auth status
 ```
 
+- Replace `Cursor` with your own agent name (`Claude Code`, `Codex`, …). Do not send a hostname.
+- The authorize URL includes `agent=`. The user sees that name on the Allow page.
+- Watch stderr for `Open http...` while login is still running. Send the user that URL if the browser did not open.
+- The user only needs to sign in (if asked) and click Allow. There is no device code to type.
 - `--api-key` on a command overrides `IMAGIFLY_API_KEY`, which overrides `~/.config/imagifly/config.json`.
-- The config file is mode `600`. Do not copy the key into the repo, chat, or logs.
+- The config file is mode `600`. Do not copy the access token into the repo, chat, or logs.
 - `auth status` returns `source` and `keyHint`. `authenticated: false` is still exit 0.
-- Do not open a browser login. There is no OAuth flow.
+- Authorized agents can be revoked at https://imagifly.net/developer.
 
 ## Verify
 
@@ -46,9 +50,9 @@ imagifly auth status
 imagifly +me
 ```
 
-`+me` is the health check (image model count). Exit 0 means the key works. Exit 3 means the key is missing or rejected.
+`+me` is the health check (image model count). Exit 0 means the token works. Exit 3 means the token is missing or rejected.
 
-When the user asked only to install or configure via `docs/cli-setup.md`, and `+me` exits 0, reply with only the block below. Copy it as-is (same wording as `docs/cli-setup.md`); do not translate it or add a second language:
+When the user asked only to install or configure via https://imagifly.net/cli/setup.md, and `+me` exits 0, reply with only the block below. Copy it as-is (same wording as that guide); do not translate it or add a second language:
 
 > Imagifly CLI 已安装并登录成功，可以用来生成图片和视频了
 > 你可以试试以下指令：
@@ -66,8 +70,8 @@ Do not include install narration, tarball or script audits, npm cache workaround
 
 | Command | When |
 | --- | --- |
-| `imagifly auth login --key imf_...` | Save a key |
-| `imagifly auth logout` | Delete the saved key. Env may still be set (`envStillSet`) |
+| `imagifly auth login --agent <name>` | Open the browser and wait for Allow |
+| `imagifly auth logout` | Delete the saved token. Env may still be set (`envStillSet`) |
 | `imagifly auth status` | See which credential is active |
 | `imagifly +me` | Authenticated health check |
 | `imagifly models image` | `GET /api/v1/images/models` |
@@ -89,7 +93,7 @@ Parse stdout only. Ignore stderr unless the command failed and stdout is empty.
 | --- | --- |
 | 0 | Success. For `image get` / `video get`, `generating` is still exit 0 |
 | 2 | Bad arguments (`BAD_ARGS`) |
-| 3 | Unauthorized. Fix the key; do not retry unchanged |
+| 3 | Unauthorized. Fix the login; do not retry unchanged |
 | 4 | Rejected request, failed generation, poll timeout, or download failure |
 | 1 | Unexpected / network failure |
 

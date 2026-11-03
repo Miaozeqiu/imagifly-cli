@@ -24,7 +24,7 @@ export async function apiRequest(pathname: string, request: ApiRequest = {}): Pr
     throw new CliError(
       3,
       "UNAUTHORIZED",
-      "No API key. Run `imagifly auth login --key imf_...` or set IMAGIFLY_API_KEY.",
+      "Not signed in. Run `imagifly auth login` or set IMAGIFLY_API_KEY.",
     );
   }
 
@@ -64,6 +64,33 @@ export async function apiRequest(pathname: string, request: ApiRequest = {}): Pr
   throw new CliError(exitCode, "REQUEST_FAILED", `HTTP ${response.status}`, {
     raw: asErrorEnvelope(parsed, response.status),
   });
+}
+
+export function resolveSiteOrigin(): string {
+  return new URL(resolveBaseUrl()).origin;
+}
+
+export async function oauthRequest(pathname: string, json: unknown): Promise<{ status: number; body: unknown }> {
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+  };
+  const url = `${resolveSiteOrigin()}${pathname.startsWith("/") ? pathname : `/${pathname}`}`;
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(json),
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    throw new CliError(1, "NETWORK_ERROR", message);
+  }
+
+  const parsed = parseBody(await response.text());
+  return { status: response.status, body: parsed };
 }
 
 export function resolveBaseUrl(): string {

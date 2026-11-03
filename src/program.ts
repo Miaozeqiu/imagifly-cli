@@ -91,7 +91,7 @@ export function buildProgram(): Command {
     "after",
     `
 Examples:
-  imagifly auth login --key imf_...
+  imagifly auth login --agent Cursor
   imagifly auth status
   imagifly +me
   imagifly models image
@@ -101,19 +101,38 @@ Exit codes: 0 success, 2 bad args, 3 unauthorized, 4 API or generation error, 1 
 `,
   );
 
-  const auth = program.command("auth").description("Save or inspect the API key");
+  const auth = addApiOptions(program.command("auth").description("Sign in with OAuth or inspect the saved token"));
   auth.action(missing("Choose auth login, auth logout, or auth status."));
-  auth
-    .command("login")
-    .description("Save an API key to ~/.config/imagifly/config.json (mode 600)")
-    .option("--key <key>", "API key (imf_...). If omitted, read one line from stdin")
+  addApiOptions(
+    auth
+      .command("login")
+    .description("Open the browser so you can click Allow, then save the access token")
+    .option("--key <key>", "Legacy API key or access token for CI; skips the browser flow")
+    .option("--agent <name>", "Agent name shown on the authorize page, for example Cursor")
+    .option("--no-browser", "Do not open a browser")
+    .option("--timeout <seconds>", "Give up waiting for approval after this many seconds")
     .action(async function (this: CommandType) {
-      await login(this.opts<{ key?: string }>().key);
-    });
-  auth.command("logout").description("Remove the saved API key").action(logout);
+      const opts = mergedOpts(this);
+      setInvocation({
+        apiKey: typeof opts.apiKey === "string" ? opts.apiKey : undefined,
+        baseUrl: typeof opts.baseUrl === "string" ? opts.baseUrl : undefined,
+      });
+      try {
+        await login({
+          key: typeof opts.key === "string" ? opts.key : undefined,
+          agent: typeof opts.agent === "string" ? opts.agent : undefined,
+          noBrowser: opts.browser === false,
+          timeout: typeof opts.timeout === "string" ? opts.timeout : undefined,
+        });
+      } finally {
+        setInvocation({});
+      }
+    }),
+  );
+  auth.command("logout").description("Remove the saved access token").action(logout);
   auth
     .command("status")
-    .description("Show whether a key is available, without printing it")
+    .description("Show whether a token is available, without printing it")
     .action(status);
 
   addApiOptions(

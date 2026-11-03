@@ -4,6 +4,7 @@ import path from "node:path";
 import { CliError } from "./errors.js";
 
 export interface StoredConfig {
+  accessToken?: string;
   apiKey?: string;
 }
 
@@ -31,15 +32,25 @@ export async function readConfig(): Promise<StoredConfig | null> {
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
       throw new Error("expected an object");
     }
-    const apiKey = (parsed as { apiKey?: unknown }).apiKey;
-    if (apiKey !== undefined && typeof apiKey !== "string") {
+    const record = parsed as { accessToken?: unknown; apiKey?: unknown };
+    if (record.accessToken !== undefined && typeof record.accessToken !== "string") {
+      throw new Error("accessToken must be a string");
+    }
+    if (record.apiKey !== undefined && typeof record.apiKey !== "string") {
       throw new Error("apiKey must be a string");
     }
-    return { apiKey };
+    return {
+      accessToken: record.accessToken,
+      apiKey: record.apiKey,
+    };
   } catch (err) {
     const reason = err instanceof Error ? err.message : String(err);
     throw new CliError(1, "CONFIG_INVALID", `Cannot parse ${file}: ${reason}`);
   }
+}
+
+export function storedCredential(stored: StoredConfig | null): string {
+  return stored?.accessToken?.trim() || stored?.apiKey?.trim() || "";
 }
 
 export async function resolveApiKey(
@@ -49,18 +60,25 @@ export async function resolveApiKey(
   if (fromFlag) return { key: fromFlag, source: "flag" };
   const fromEnv = process.env.IMAGIFLY_API_KEY?.trim();
   if (fromEnv) return { key: fromEnv, source: "env" };
-  const stored = await readConfig();
-  const fromFile = stored?.apiKey?.trim();
+  const fromFile = storedCredential(await readConfig());
   if (fromFile) return { key: fromFile, source: "config" };
   return null;
 }
 
+export async function saveAccessToken(accessToken: string): Promise<string> {
+  return writeConfig({ accessToken });
+}
+
 export async function saveApiKey(apiKey: string): Promise<string> {
+  return writeConfig({ apiKey });
+}
+
+async function writeConfig(config: StoredConfig): Promise<string> {
   const file = configFilePath();
   const dir = path.dirname(file);
   await mkdir(dir, { recursive: true });
   await chmod(dir, 0o700);
-  const body = `${JSON.stringify({ apiKey }, null, 2)}\n`;
+  const body = `${JSON.stringify(config, null, 2)}\n`;
   await writeFile(file, body, { mode: 0o600 });
   await chmod(file, 0o600);
   return file;

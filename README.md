@@ -26,15 +26,17 @@ npm test
 
 ## Auth
 
-Precedence: `--api-key` on a command, then `IMAGIFLY_API_KEY`, then `~/.config/imagifly/config.json`. The file is created mode `600`. Set `IMAGIFLY_CONFIG_DIR` to override that directory. Set `IMAGIFLY_BASE_URL` to point at another host.
+`imagifly auth login --agent Cursor` opens the browser. Sign in if needed, click Allow, and the CLI stores the access token. Revoke authorized agents later on https://imagifly.net/developer.
+
+Precedence: `--api-key` on a command, then `IMAGIFLY_API_KEY`, then `accessToken` or a leftover `apiKey` in `~/.config/imagifly/config.json`. The file is created mode `600`. Set `IMAGIFLY_CONFIG_DIR` to override that directory. Set `IMAGIFLY_BASE_URL` to point at another host.
 
 ```bash
-imagifly auth login --key imf_...
+imagifly auth login --agent Cursor
 imagifly auth status
 imagifly auth logout
 ```
 
-`auth login` without `--key` reads one line from stdin (or prompts on a terminal). Agents should pass `--key`.
+`--key` is only for CI or a leftover API key. Agents should run `imagifly auth login --agent <name>` and tell the user to click Allow in the opened page.
 
 ## Commands
 
@@ -70,7 +72,7 @@ Stdout is one JSON object, matching the Imagifly envelope when the API returns o
 | --- | --- |
 | 0 | Success |
 | 2 | Bad arguments |
-| 3 | Missing or rejected API key (`401` / `403`) |
+| 3 | Missing or rejected access token (`401` / `403`) |
 | 4 | API or generation error (including `failed` tasks and poll timeout) |
 | 1 | Unexpected failure |
 
@@ -82,8 +84,8 @@ A submit that returns `202` has already reserved credits. If you still have the 
 - Images: https://imagifly.net/docs/api/images
 - Videos: https://imagifly.net/docs/api/videos
 - Errors: https://imagifly.net/docs/getting-started/errors
-- Agent setup for this CLI: [docs/cli-setup.md](docs/cli-setup.md)
-- Agent skill: [skills/imagifly-cli/SKILL.md](skills/imagifly-cli/SKILL.md)
+- Agent setup for this CLI: https://imagifly.net/cli/setup.md
+- Agent skill: `skills/imagifly-cli/SKILL.md` in this package
 
 ## Publish
 

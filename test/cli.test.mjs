@@ -39,6 +39,19 @@ function run(args, options = {}) {
   });
 }
 
+async function waitForMatch(child, readStderr, pattern) {
+  const started = Date.now();
+  while (Date.now() - started < 8000) {
+    const match = pattern.exec(readStderr());
+    if (match) return match;
+    if (child.exitCode !== null) {
+      throw new Error(`CLI exited ${child.exitCode} before matching ${pattern}: ${readStderr()}`);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  throw new Error(`CLI did not match ${pattern}: ${readStderr()}`);
+}
+
 function jsonStdout(result) {
   assert.equal(result.stdout.endsWith("\n"), true, result.stdout);
   const lines = result.stdout.trim().split("\n");
@@ -70,6 +83,15 @@ async function startApi() {
         res.end(data);
       };
 
+      if (req.method === "POST" && url.pathname === "/api/oauth/token") {
+        send(200, {
+          ok: true,
+          access_token: KEY,
+          token_type: "Bearer",
+          scope: "api",
+        });
+        return;
+      }
       if (url.pathname === "/files/cat.png") {
         send(200, Buffer.from("PNGDATA"), "image/png");
         return;
@@ -183,8 +205,11 @@ test("package metadata and docs", async () => {
   assert.match(skill, /npm install -g @imagifly\/cli/);
   assert.doesNotMatch(skill, /claude mcp add|mcp\.json/);
   const setup = await readFile("docs/cli-setup.md", "utf8");
-  assert.match(setup, /imagifly auth login --key/);
+  assert.match(setup, /imagifly auth login --agent/);
   assert.match(setup, /只需输出以下内容/);
+  assert.match(setup, /https:\/\/imagifly\.net\/cli\/setup\.md/);
+  assert.doesNotMatch(setup, /https:\/\/imagifly\.net\/cli\/skill\.md/);
+  assert.doesNotMatch(setup, /raw\.githubusercontent\.com/);
   const successLine = "Imagifly CLI 已安装并登录成功，可以用来生成图片和视频了";
   assert.match(setup, new RegExp(successLine));
   assert.match(skill, new RegExp(successLine));
@@ -217,7 +242,7 @@ test("auth login, status, logout, and env precedence", async () => {
     assert.equal(missing.code, 2);
     const missingBody = jsonStdout(missing);
     assert.equal(missingBody.ok, false);
-    assert.match(missingBody.message, /--key imf_/);
+    assert.match(missingBody.message, /auth login/);
 
     const secret = "imf_supersecretvalue";
     const saved = await run(["auth", "login", "--key", secret], { env: { IMAGIFLY_CONFIG_DIR: dir } });
@@ -225,27 +250,24 @@ test("auth login, status, logout, and env precedence", async () => {
     const savedBody = jsonStdout(saved);
     assert.equal(savedBody.ok, true);
     assert.equal(savedBody.saved, true);
+    assert.equal(savedBody.method, "key");
     assert.equal(saved.stdout.includes(secret), false);
     assert.equal(saved.stderr.includes(secret), false);
     const file = path.join(dir, "config.json");
-    const mode = (await stat(file)).mode & 0o777;
-    assert.equal(mode, 0o600);
+    if (process.platform !== "win32") {
+      const mode = (await stat(file)).mode & 0o777;
+      assert.equal(mode, 0o600);
+    }
     const stored = JSON.parse(await readFile(file, "utf8"));
     assert.equal(stored.apiKey, secret);
-
-    const piped = await run(["auth", "login"], {
-      env: { IMAGIFLY_CONFIG_DIR: dir },
-      input: "imf_fromstdinvalue\n",
-    });
-    assert.equal(piped.code, 0);
-    assert.equal(JSON.parse(await readFile(file, "utf8")).apiKey, "imf_fromstdinvalue");
 
     const fromFile = await run(["auth", "status"], { env: { IMAGIFLY_CONFIG_DIR: dir } });
     assert.equal(fromFile.code, 0);
     const fileStatus = jsonStdout(fromFile);
     assert.equal(fileStatus.authenticated, true);
     assert.equal(fileStatus.source, "config");
-    assert.equal(fromFile.stdout.includes("imf_fromstdinvalue"), false);
+    assert.equal(fromFile.stdout.includes(secret), false);
+    assert.equal(fileStatus.method, "key");
 
     const fromEnv = await run(["auth", "status"], {
       env: { IMAGIFLY_CONFIG_DIR: dir, IMAGIFLY_API_KEY: KEY },
@@ -262,6 +284,67 @@ test("auth login, status, logout, and env precedence", async () => {
     assert.equal(removedBody.envStillSet, true);
     await assert.rejects(stat(file));
   } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("oauth browser login saves an access token", { timeout: 20_000 }, async () => {
+  const api = await startApi();
+  const dir = await mkdtemp(path.join(tmpdir(), "imagifly-cli-oauth-"));
+  const env = {
+    ...process.env,
+    IMAGIFLY_CONFIG_DIR: dir,
+    IMAGIFLY_BASE_URL: api.base,
+    IMAGIFLY_ALLOW_DEVICE_LOGIN: "1",
+  };
+  delete env.IMAGIFLY_API_KEY;
+  const child = spawn(process.execPath, [cli, "auth", "login", "--no-browser", "--timeout", "20"], {
+    env,
+    stdio: ["pipe", "pipe", "pipe"],
+  });
+  let stdout = "";
+  let stderr = "";
+  child.stdout.setEncoding("utf8");
+  child.stderr.setEncoding("utf8");
+  child.stdout.on("data", (chunk) => {
+    stdout += chunk;
+  });
+  child.stderr.on("data", (chunk) => {
+    stderr += chunk;
+  });
+  child.stdin.end();
+  const closed = new Promise((resolve, reject) => {
+    child.on("error", reject);
+    child.on("close", resolve);
+  });
+
+  try {
+    const callbackMatch = await waitForMatch(child, () => stderr, /callback (http:\/\/127\.0\.0\.1:\d+\/callback)/);
+    const stateMatch = await waitForMatch(child, () => stderr, /[?&]state=([^&\s]+)/);
+    const redirectUri = callbackMatch[1];
+    const state = decodeURIComponent(stateMatch[1]);
+    const callback = await fetch(`${redirectUri}?code=test-code&state=${encodeURIComponent(state)}`, {
+      signal: AbortSignal.timeout(3000),
+    });
+    assert.equal(callback.ok, true, await callback.text());
+
+    const code = await closed;
+    assert.equal(code, 0, stderr);
+    const body = JSON.parse(stdout.trim());
+    assert.equal(body.ok, true);
+    assert.equal(body.method, "oauth");
+    assert.equal(stdout.includes(KEY), false);
+    const stored = JSON.parse(await readFile(path.join(dir, "config.json"), "utf8"));
+    assert.equal(stored.accessToken, KEY);
+
+    const health = await run(["+me"], {
+      env: { IMAGIFLY_CONFIG_DIR: dir, IMAGIFLY_BASE_URL: api.base },
+    });
+    assert.equal(health.code, 0, health.stderr);
+    assert.equal(jsonStdout(health).ok, true);
+  } finally {
+    if (!child.killed) child.kill("SIGTERM");
+    await api.close();
     await rm(dir, { recursive: true, force: true });
   }
 });
