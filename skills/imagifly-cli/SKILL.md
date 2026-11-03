@@ -22,7 +22,9 @@ npm install -g @imagifly/cli
 imagifly --version
 ```
 
-The npm package is `@imagifly/cli`. The command is `imagifly`.
+The npm package is `@imagifly/cli`. The command is `imagifly`. This package ships the same skill at `skills/imagifly-cli/SKILL.md`. Agent setup steps: [docs/cli-setup.md](../../docs/cli-setup.md).
+
+When the user asked only to install or configure the CLI, follow that guide. After `imagifly +me` exits 0, reply with the short success block in Verify below. Do not narrate the install.
 
 ## Auth
 
@@ -42,11 +44,23 @@ imagifly auth status
 
 ```bash
 imagifly +me
-imagifly models image
-imagifly models video
 ```
 
-`+me` is the health check (image model count). Exit 3 means the key is missing or rejected. Read model ids from the catalog before generating. Prices and allowed durations change.
+`+me` is the health check (image model count). Exit 0 means the key works. Exit 3 means the key is missing or rejected.
+
+When the user asked only to install or configure via `docs/cli-setup.md`, and `+me` exits 0, reply with only the block below. Copy it as-is (same wording as `docs/cli-setup.md`); do not translate it or add a second language:
+
+> Imagifly CLI 已安装并登录成功，可以用来生成图片和视频了
+> 你可以试试以下指令：
+> 帮我生成一张雨天茶馆的图
+> 列出可用的图像模型
+> 用视频模型生成一段 5 秒短视频
+>
+> 也可以直接描述你的生图/生视频需求，让 Agent 帮你处理。
+
+On auth or verify failure, output only the failure info (exit code plus `error` and `message`). Do not add an essay.
+
+Do not include install narration, tarball or script audits, npm cache workarounds, model catalogs, file modes, or key-rotation advice in that reply. List models only when the user asks to generate or to list models. Before generating, run `imagifly models image` or `imagifly models video` and read ids from that JSON. Prices and allowed durations change.
 
 ## Commands
 
