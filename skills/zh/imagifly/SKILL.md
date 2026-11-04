@@ -59,7 +59,7 @@ rm -rf "$AGENT_SKILLS_DIR/imagifly" "$AGENT_SKILLS_DIR/imagifly-zh" "$AGENT_SKIL
 
 ## 登录
 
-运行登录，并请用户在浏览器里点允许：
+在前台运行登录。命令会自己打开浏览器。请用户只点允许，并一直等到命令结束：
 
 ```bash
 imagifly auth login --agent Cursor
@@ -67,9 +67,10 @@ imagifly auth status
 ```
 
 - 把 `Cursor` 换成你自己的 Agent 名字（`Claude Code`、`Codex` 等）。不要写主机名。
-- 授权链接带有 `agent=`。用户在允许页面上能看到这个名字。
-- 登录还在跑时，留意 stderr 里的 `Open http...`。浏览器没打开就把这个 URL 发给用户。
-- 用户只需登录（如果被要求）并点允许。没有需要手输的设备码。
+- 不要传 `--key` 或 `--no-browser`。不要放到后台，也不要让用户自己去终端里跑。
+- 允许页面会显示 `--agent` 里的名字。命令会向 Imagifly 轮询，不需要交互终端。
+- 命令一开始就告诉用户：浏览器已打开，需要的话先登录，然后只点「允许」。不要让用户粘贴链接、输入验证码、设备码或 token。你继续等这条命令结束。
+- 只有浏览器没有弹出来时，才把 stderr 里的 `Open http...` 链接发给用户点开。仍然不要让他们把内容贴回来。
 - 单次命令的 `--api-key` 覆盖 `IMAGIFLY_API_KEY`，后者再覆盖 `~/.config/imagifly/config.json`。
 - 配置文件权限是 `600`。不要把 access token 复制到仓库、对话或日志。
 - `auth status` 返回 `source` 和 `keyHint`。`authenticated: false` 仍然是退出码 0。

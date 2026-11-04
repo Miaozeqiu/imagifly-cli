@@ -35,10 +35,11 @@ rm -rf "$AGENT_SKILLS_DIR/imagifly-zh" "$AGENT_SKILLS_DIR/imagifly-ja" "$AGENT_S
 imagifly auth login --agent Cursor
 ```
 
-- 先完成第 1 步。在终端里运行，不要传 `--key`。
+- 先完成第 1 步。不要传 `--key` 或 `--no-browser`。在前台运行这条命令，让它自己打开浏览器，并一直等到用户点允许。不要放到后台，也不要让用户自己去终端里跑。
 - `--agent` 换成你自己的名字，例如 `Cursor`、`Claude Code`、`Codex`。不要写主机名。
-- 授权链接带有 `agent=`。用户在允许页面上能看到这个名字。
-- 把 stderr 里的 URL 发给用户。需要的话先登录，然后只点「允许」。没有要手输的设备码。
+- 允许页面会显示 `--agent` 里的名字。
+- 命令一开始就告诉用户：浏览器已打开，需要的话先登录，然后只点「允许」。不要让用户在对话里粘贴链接、输入验证码、设备码或 token。你继续等这条命令结束。
+- 只有浏览器没有弹出来时，才把 stderr 里的 `Open http...` 链接发给用户点开。仍然不要让他们把内容贴回来。
 - CLI 把 access token 写到 `~/.config/imagifly/config.json`。不要把 token 发到对话、日志或仓库。
 - 已授权的 Agent 在 https://imagifly.net/developer 管理。
 - 失败时重新运行同一条命令，把错误交给用户。

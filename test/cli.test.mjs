@@ -72,6 +72,7 @@ function jsonStdout(result) {
 async function startApi() {
   const hits = [];
   let imagePolls = 0;
+  let devicePolls = 0;
   const server = createServer((req, res) => {
     const url = new URL(req.url ?? "/", "http://127.0.0.1");
     const chunks = [];
@@ -93,7 +94,32 @@ async function startApi() {
         res.end(data);
       };
 
+      if (req.method === "POST" && url.pathname === "/api/oauth/device") {
+        const address = server.address();
+        const port = address && typeof address === "object" ? address.port : 80;
+        const userCode = "u".repeat(43);
+        send(200, {
+          ok: true,
+          device_code: "d".repeat(43),
+          user_code: userCode,
+          verification_uri: `http://127.0.0.1:${port}/oauth/device`,
+          verification_uri_complete: `http://127.0.0.1:${port}/oauth/device?user_code=${userCode}`,
+          expires_in: 30,
+          interval: 1,
+        });
+        return;
+      }
       if (req.method === "POST" && url.pathname === "/api/oauth/token") {
+        const json = JSON.parse(body.toString("utf8") || "{}");
+        if (json.grant_type !== "urn:ietf:params:oauth:grant-type:device_code") {
+          send(400, { ok: false, error: "INVALID_GRANT", message: "Unsupported grant_type." });
+          return;
+        }
+        devicePolls += 1;
+        if (devicePolls === 1) {
+          send(400, { ok: false, error: "AUTHORIZATION_PENDING", message: "Waiting for the browser approval." });
+          return;
+        }
         send(200, {
           ok: true,
           access_token: KEY,
@@ -317,11 +343,13 @@ test("help and version stay off stdout", async () => {
 test("auth login, status, logout, and env precedence", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "imagifly-cli-"));
   try {
-    const missing = await run(["auth", "login"], { env: { IMAGIFLY_CONFIG_DIR: dir } });
-    assert.equal(missing.code, 2);
+    const missing = await run(["auth", "login", "--no-browser", "--timeout", "15"], {
+      env: { IMAGIFLY_CONFIG_DIR: dir, IMAGIFLY_BASE_URL: "http://127.0.0.1:1" },
+    });
+    assert.equal(missing.code, 1);
     const missingBody = jsonStdout(missing);
     assert.equal(missingBody.ok, false);
-    assert.match(missingBody.message, /auth login/);
+    assert.equal(missingBody.error, "NETWORK_ERROR");
 
     const secret = "imf_supersecretvalue";
     const saved = await run(["auth", "login", "--key", secret], { env: { IMAGIFLY_CONFIG_DIR: dir } });
@@ -374,7 +402,6 @@ test("oauth browser login saves an access token", { timeout: 20_000 }, async () 
     ...process.env,
     IMAGIFLY_CONFIG_DIR: dir,
     IMAGIFLY_BASE_URL: api.base,
-    IMAGIFLY_ALLOW_DEVICE_LOGIN: "1",
   };
   delete env.IMAGIFLY_API_KEY;
   const child = spawn(process.execPath, [cli, "auth", "login", "--no-browser", "--timeout", "20"], {
@@ -398,17 +425,19 @@ test("oauth browser login saves an access token", { timeout: 20_000 }, async () 
   });
 
   try {
-    const callbackMatch = await waitForMatch(child, () => stderr, /callback (http:\/\/127\.0\.0\.1:\d+\/callback)/);
-    const stateMatch = await waitForMatch(child, () => stderr, /[?&]state=([^&\s]+)/);
-    const redirectUri = callbackMatch[1];
-    const state = decodeURIComponent(stateMatch[1]);
-    const callback = await fetch(`${redirectUri}?code=test-code&state=${encodeURIComponent(state)}`, {
-      signal: AbortSignal.timeout(3000),
-    });
-    assert.equal(callback.ok, true, await callback.text());
+    const openMatch = await waitForMatch(
+      child,
+      () => stderr,
+      /Open (http:\/\/127\.0\.0\.1:\d+\/oauth\/device\?user_code=u{43})/,
+    );
+    assert.match(openMatch[1], /user_code=/);
+    assert.equal(stderr.includes("d".repeat(43)), false);
 
     const code = await closed;
     assert.equal(code, 0, stderr);
+    const tokenPolls = api.hits.filter((hit) => hit.path === "/api/oauth/token");
+    assert.equal(tokenPolls.length, 2);
+    assert.equal(JSON.parse(tokenPolls[0].body.toString("utf8")).grant_type, "urn:ietf:params:oauth:grant-type:device_code");
     const body = JSON.parse(stdout.trim());
     assert.equal(body.ok, true);
     assert.equal(body.method, "oauth");

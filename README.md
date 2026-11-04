@@ -119,7 +119,7 @@ imagifly auth status
 imagifly auth logout
 ```
 
-`--key` is only for CI or a leftover API key. Agents should run `imagifly auth login --agent <name>` and tell the user to click Allow in the opened page.
+`--key` is only for CI or a leftover API key. Agents should run `imagifly auth login --agent <name>` in the foreground, let it open the browser, and wait until the user clicks Allow. Do not ask the user to paste a link or code.
 
 ## Commands
 

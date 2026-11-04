@@ -35,10 +35,11 @@ Replace `$AGENT_SKILLS_DIR` with the directory this agent loads. The `rm` remove
 imagifly auth login --agent Cursor
 ```
 
-- Finish step 1 first. Run this in a terminal. Do not pass `--key`.
+- Finish step 1 first. Do not pass `--key` or `--no-browser`. Run the command in the foreground so it opens the browser and waits until the user clicks Allow. Do not background it, and do not ask the user to run it in their own terminal.
 - Replace `Cursor` with your agent name (`Claude Code`, `Codex`, …). Do not send a hostname.
-- The authorize URL includes `agent=`. The user sees that name on the Allow page.
-- Send the user the URL from stderr and ask them to sign in if needed, then click Allow. There is no device code.
+- The Allow page shows the `--agent` name.
+- As soon as it starts, tell the user the browser is open: sign in if asked, then click Allow. Do not ask them to paste a link, code, or token into the chat. Keep waiting until the command exits.
+- Only if no browser window appears, send the `Open http...` link from stderr for them to open. Still do not ask them to paste anything back.
 - The CLI writes the access token to `~/.config/imagifly/config.json`. Do not copy the token into the chat, logs, or the repo.
 - Revoke agents at https://imagifly.net/developer.
 - On failure, rerun the same command and give the user the error.

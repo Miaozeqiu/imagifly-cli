@@ -63,7 +63,7 @@ To clear the saved token as well, run `imagifly auth logout` before `npm uninsta
 
 ## Auth
 
-Run login and tell the user to click Allow in the browser:
+Run login in the foreground. The command opens the browser. Tell the user only to click Allow, and wait until the command exits:
 
 ```bash
 imagifly auth login --agent Cursor
@@ -71,9 +71,10 @@ imagifly auth status
 ```
 
 - Replace `Cursor` with your own agent name (`Claude Code`, `Codex`, …). Do not send a hostname.
-- The authorize URL includes `agent=`. The user sees that name on the Allow page.
-- Watch stderr for `Open http...` while login is still running. Send the user that URL if the browser did not open.
-- The user only needs to sign in (if asked) and click Allow. There is no device code to type.
+- Do not pass `--key` or `--no-browser`. Do not background it, and do not ask the user to run it in their own terminal.
+- The Allow page shows the `--agent` name. Login polls Imagifly and does not need a terminal.
+- As soon as it starts, tell the user the browser is open: sign in if asked, then click Allow. Do not ask them to paste a link, code, or token into the chat. Keep waiting until the command exits.
+- Only if no browser window appears, send the `Open http...` link from stderr for them to open. Still do not ask them to paste anything back.
 - `--api-key` on a command overrides `IMAGIFLY_API_KEY`, which overrides `~/.config/imagifly/config.json`.
 - The config file is mode `600`. Do not copy the access token into the repo, chat, or logs.
 - `auth status` returns `source` and `keyHint`. `authenticated: false` is still exit 0.
