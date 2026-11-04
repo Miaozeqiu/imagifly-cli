@@ -1,5 +1,5 @@
 ---
-name: imagifly-zh
+name: imagifly
 description: >-
   用官方命令行生成图片和视频（npm 包 @imagifly/cli，命令 imagifly）。用于安装、更新、卸载命令行和本技能，OAuth 登录，列出模型，生成或下载图片和视频，阅读 JSON 结果。不要用于 MCP 服务器配置。
 ---
@@ -10,7 +10,7 @@ description: >-
 
 本技能不安装、也不配置 Imagifly MCP 服务器。MCP 文档：https://imagifly.net/docs/agents
 
-选择器里的名字是 `imagifly-zh`。英语是 `imagifly`，日语是 `imagifly-ja`。只安装与用户语言对应的那一个目录，然后删掉另外两个以及遗留的 `imagifly-cli`，让选择器只显示一个名字。繁体中文也用这一份。
+选择器里的名字始终是 `imagifly`。这份文件的描述是简体中文。英语说明在 `skills/en/imagifly/SKILL.md`，日语说明在 `skills/ja/imagifly/SKILL.md`。三份都复制到 `$AGENT_SKILLS_DIR/imagifly/SKILL.md`，只装与用户语言对应的那一份。复制后删掉遗留目录 `imagifly-zh`、`imagifly-ja`、`imagifly-cli`。繁体中文也用这一份。
 
 ## 安装
 
@@ -18,29 +18,29 @@ Node.js 18+。
 
 ```bash
 npm install -g @imagifly/cli
-SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/imagifly-zh/SKILL.md"
-mkdir -p "$AGENT_SKILLS_DIR/imagifly-zh"
-cp "$SKILL_SRC" "$AGENT_SKILLS_DIR/imagifly-zh/SKILL.md"
-rm -rf "$AGENT_SKILLS_DIR/imagifly" "$AGENT_SKILLS_DIR/imagifly-ja" "$AGENT_SKILLS_DIR/imagifly-cli"
+SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/zh/imagifly/SKILL.md"
+mkdir -p "$AGENT_SKILLS_DIR/imagifly"
+cp "$SKILL_SRC" "$AGENT_SKILLS_DIR/imagifly/SKILL.md"
+rm -rf "$AGENT_SKILLS_DIR/imagifly-zh" "$AGENT_SKILLS_DIR/imagifly-ja" "$AGENT_SKILLS_DIR/imagifly-cli"
 imagifly --version
 ```
 
-npm 包是 `@imagifly/cli`。命令是 `imagifly`。本文件是 `skills/imagifly-zh/SKILL.md`。包内还有 `skills/imagifly/SKILL.md` 和 `skills/imagifly-ja/SKILL.md`。安装步骤：https://imagifly.net/cli/setup.md
+npm 包是 `@imagifly/cli`。命令是 `imagifly`。本文件是 `skills/zh/imagifly/SKILL.md`。包内还有 `skills/en/imagifly/SKILL.md` 和 `skills/ja/imagifly/SKILL.md`。安装步骤：https://imagifly.net/cli/setup.md
 
-把 `$AGENT_SKILLS_DIR` 换成当前 Agent 加载 skills 的目录。上面的 `rm` 会去掉其他语言的 skill 和旧目录 `imagifly-cli`。中文安装不要再复制那两份。
+把 `$AGENT_SKILLS_DIR` 换成当前 Agent 加载 skills 的目录。上面的 `rm` 只删遗留的 `imagifly-zh`、`imagifly-ja`、`imagifly-cli`，不会删掉刚复制的 `imagifly`。中文安装不要复制另外两份。
 
 用户只要求安装或配置 CLI 时，按那份指南做。`imagifly +me` 退出码为 0 之后，只回复下面「验证」里、对应用户语言的那一段成功文案。不要叙述安装过程。升级或卸载走「更新」或「卸载」，不要用安装成功文案。
 
 ## 更新
 
-升级全局包，覆盖 `imagifly-zh`，并删掉其他语言目录。把 `$AGENT_SKILLS_DIR` 换成当前 Agent 的 skills 目录。已有登录不用重做。
+升级全局包，用这份中文 skill 覆盖 `$AGENT_SKILLS_DIR/imagifly/SKILL.md`，并删掉遗留目录。把 `$AGENT_SKILLS_DIR` 换成当前 Agent 的 skills 目录。已有登录不用重做。
 
 ```bash
 npm install -g @imagifly/cli@latest
-SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/imagifly-zh/SKILL.md"
-mkdir -p "$AGENT_SKILLS_DIR/imagifly-zh"
-cp "$SKILL_SRC" "$AGENT_SKILLS_DIR/imagifly-zh/SKILL.md"
-rm -rf "$AGENT_SKILLS_DIR/imagifly" "$AGENT_SKILLS_DIR/imagifly-ja" "$AGENT_SKILLS_DIR/imagifly-cli"
+SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/zh/imagifly/SKILL.md"
+mkdir -p "$AGENT_SKILLS_DIR/imagifly"
+cp "$SKILL_SRC" "$AGENT_SKILLS_DIR/imagifly/SKILL.md"
+rm -rf "$AGENT_SKILLS_DIR/imagifly-zh" "$AGENT_SKILLS_DIR/imagifly-ja" "$AGENT_SKILLS_DIR/imagifly-cli"
 imagifly --version
 ```
 
@@ -48,7 +48,7 @@ imagifly --version
 
 ## 卸载
 
-卸掉全局包，并删掉选择器里可能出现的全部 Imagifly skill 目录：`imagifly`、`imagifly-zh`、`imagifly-ja`，以及遗留的 `imagifly-cli`。`$AGENT_SKILLS_DIR` 与安装时相同。
+卸掉全局包，并删掉 `$AGENT_SKILLS_DIR/imagifly`，以及遗留的 `imagifly-zh`、`imagifly-ja`、`imagifly-cli`。`$AGENT_SKILLS_DIR` 与安装时相同。
 
 ```bash
 npm uninstall -g @imagifly/cli

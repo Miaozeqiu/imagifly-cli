@@ -1,5 +1,5 @@
 ---
-name: imagifly-ja
+name: imagifly
 description: >-
   公式 CLI（npm パッケージ @imagifly/cli、コマンド imagifly）で画像と動画を生成する。CLI とこのスキルのインストール、更新、アンインストール、OAuth ログイン、モデル一覧、画像と動画の生成とダウンロード、JSON 結果の確認に使う。MCP サーバーの設定には使わない。
 ---
@@ -10,7 +10,7 @@ description: >-
 
 このスキルは Imagifly の MCP サーバーをインストールも設定もしない。MCP のドキュメント: https://imagifly.net/docs/agents
 
-ピッカーに出る名前は `imagifly-ja`。英語は `imagifly`、簡体字中国語は `imagifly-zh`。ユーザーの言語に合うディレクトリだけをインストールし、残りの二つと古い `imagifly-cli` を削除して、ピッカーには一つの名前だけが出るようにする。
+ピッカーに出る名前は常に `imagifly`。このファイルの説明は日本語。英語は `skills/en/imagifly/SKILL.md`、簡体字中国語は `skills/zh/imagifly/SKILL.md`。どれも `$AGENT_SKILLS_DIR/imagifly/SKILL.md` にコピーし、ユーザーの言語に合うファイルだけを入れる。コピー後に残っている `imagifly-zh`、`imagifly-ja`、`imagifly-cli` を削除する。
 
 ## インストール
 
@@ -18,29 +18,29 @@ Node.js 18+。
 
 ```bash
 npm install -g @imagifly/cli
-SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/imagifly-ja/SKILL.md"
-mkdir -p "$AGENT_SKILLS_DIR/imagifly-ja"
-cp "$SKILL_SRC" "$AGENT_SKILLS_DIR/imagifly-ja/SKILL.md"
-rm -rf "$AGENT_SKILLS_DIR/imagifly" "$AGENT_SKILLS_DIR/imagifly-zh" "$AGENT_SKILLS_DIR/imagifly-cli"
+SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/ja/imagifly/SKILL.md"
+mkdir -p "$AGENT_SKILLS_DIR/imagifly"
+cp "$SKILL_SRC" "$AGENT_SKILLS_DIR/imagifly/SKILL.md"
+rm -rf "$AGENT_SKILLS_DIR/imagifly-zh" "$AGENT_SKILLS_DIR/imagifly-ja" "$AGENT_SKILLS_DIR/imagifly-cli"
 imagifly --version
 ```
 
-npm パッケージは `@imagifly/cli`。コマンドは `imagifly`。このファイルは `skills/imagifly-ja/SKILL.md`。パッケージには `skills/imagifly/SKILL.md` と `skills/imagifly-zh/SKILL.md` もある。セットアップ手順: https://imagifly.net/cli/setup.md
+npm パッケージは `@imagifly/cli`。コマンドは `imagifly`。このファイルは `skills/ja/imagifly/SKILL.md`。パッケージには `skills/en/imagifly/SKILL.md` と `skills/zh/imagifly/SKILL.md` もある。セットアップ手順: https://imagifly.net/cli/setup.md
 
-`$AGENT_SKILLS_DIR` は、この Agent がスキルを読むディレクトリに置き換える。上の `rm` は他言語のスキルと古い `imagifly-cli` を消す。日本語のインストールでは、それらをコピーしない。
+`$AGENT_SKILLS_DIR` は、この Agent がスキルを読むディレクトリに置き換える。上の `rm` は残っている `imagifly-zh`、`imagifly-ja`、`imagifly-cli` だけを消し、今コピーした `imagifly` は消さない。日本語のインストールでは、他のロケールファイルをコピーしない。
 
 ユーザーが CLI のインストールか設定だけを頼んだときは、そのガイドに従う。`imagifly +me` の終了コードが 0 なら、下の「確認」にある、ユーザーの言語の成功文面だけを返す。インストール経過は書かない。アップグレードと削除は「更新」か「アンインストール」を使い、インストール成功の文面は使わない。
 
 ## 更新
 
-グローバルパッケージを上げ、`imagifly-ja` を上書きし、他言語のディレクトリを消す。`$AGENT_SKILLS_DIR` はこの Agent のスキルディレクトリ。保存済みのログインはそのままにする。
+グローバルパッケージを上げ、この日本語スキルで `$AGENT_SKILLS_DIR/imagifly/SKILL.md` を上書きし、残っている古いディレクトリを消す。`$AGENT_SKILLS_DIR` はこの Agent のスキルディレクトリ。保存済みのログインはそのままにする。
 
 ```bash
 npm install -g @imagifly/cli@latest
-SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/imagifly-ja/SKILL.md"
-mkdir -p "$AGENT_SKILLS_DIR/imagifly-ja"
-cp "$SKILL_SRC" "$AGENT_SKILLS_DIR/imagifly-ja/SKILL.md"
-rm -rf "$AGENT_SKILLS_DIR/imagifly" "$AGENT_SKILLS_DIR/imagifly-zh" "$AGENT_SKILLS_DIR/imagifly-cli"
+SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/ja/imagifly/SKILL.md"
+mkdir -p "$AGENT_SKILLS_DIR/imagifly"
+cp "$SKILL_SRC" "$AGENT_SKILLS_DIR/imagifly/SKILL.md"
+rm -rf "$AGENT_SKILLS_DIR/imagifly-zh" "$AGENT_SKILLS_DIR/imagifly-ja" "$AGENT_SKILLS_DIR/imagifly-cli"
 imagifly --version
 ```
 
@@ -48,7 +48,7 @@ imagifly --version
 
 ## アンインストール
 
-グローバルパッケージと、ピッカーに出得る Imagifly のスキルディレクトリをすべて消す。`imagifly`、`imagifly-zh`、`imagifly-ja`、および残っている `imagifly-cli`。`$AGENT_SKILLS_DIR` はインストール時と同じディレクトリ。
+グローバルパッケージと、インストール先の `$AGENT_SKILLS_DIR/imagifly`、および残っている `imagifly-zh`、`imagifly-ja`、`imagifly-cli` を消す。`$AGENT_SKILLS_DIR` はインストール時と同じディレクトリ。
 
 ```bash
 npm uninstall -g @imagifly/cli
