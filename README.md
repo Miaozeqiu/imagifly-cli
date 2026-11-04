@@ -26,10 +26,36 @@ npm test
 
 ## Agent skill
 
-The package ships one skill, `skills/imagifly/SKILL.md`, with `name: imagifly`. The picker shows `imagifly`. The description is English, Simplified Chinese, and Japanese in that one string. Replace `$AGENT_SKILLS_DIR` with the directory that agent loads. Full steps: https://imagifly.net/cli/setup.md
+The picker name is always `imagifly`. The package ships three locale sources. Link the setup page that matches the prompt, and copy only that file into `$AGENT_SKILLS_DIR/imagifly/SKILL.md`.
+
+| Prompt | Setup URL | Skill source |
+| --- | --- | --- |
+| English | https://imagifly.net/cli/setup.md | `skills/en/imagifly/SKILL.md` |
+| Simplified Chinese | https://imagifly.net/cli/setup.zh.md | `skills/zh/imagifly/SKILL.md` |
+| Japanese | https://imagifly.net/cli/setup.ja.md | `skills/ja/imagifly/SKILL.md` |
+
+English:
 
 ```bash
-SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/imagifly/SKILL.md"
+SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/en/imagifly/SKILL.md"
+mkdir -p "$AGENT_SKILLS_DIR/imagifly"
+cp "$SKILL_SRC" "$AGENT_SKILLS_DIR/imagifly/SKILL.md"
+rm -rf "$AGENT_SKILLS_DIR/imagifly-zh" "$AGENT_SKILLS_DIR/imagifly-ja" "$AGENT_SKILLS_DIR/imagifly-cli" "$AGENT_SKILLS_DIR/en/imagifly" "$AGENT_SKILLS_DIR/zh/imagifly" "$AGENT_SKILLS_DIR/ja/imagifly"
+```
+
+Simplified Chinese:
+
+```bash
+SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/zh/imagifly/SKILL.md"
+mkdir -p "$AGENT_SKILLS_DIR/imagifly"
+cp "$SKILL_SRC" "$AGENT_SKILLS_DIR/imagifly/SKILL.md"
+rm -rf "$AGENT_SKILLS_DIR/imagifly-zh" "$AGENT_SKILLS_DIR/imagifly-ja" "$AGENT_SKILLS_DIR/imagifly-cli" "$AGENT_SKILLS_DIR/en/imagifly" "$AGENT_SKILLS_DIR/zh/imagifly" "$AGENT_SKILLS_DIR/ja/imagifly"
+```
+
+Japanese:
+
+```bash
+SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/ja/imagifly/SKILL.md"
 mkdir -p "$AGENT_SKILLS_DIR/imagifly"
 cp "$SKILL_SRC" "$AGENT_SKILLS_DIR/imagifly/SKILL.md"
 rm -rf "$AGENT_SKILLS_DIR/imagifly-zh" "$AGENT_SKILLS_DIR/imagifly-ja" "$AGENT_SKILLS_DIR/imagifly-cli" "$AGENT_SKILLS_DIR/en/imagifly" "$AGENT_SKILLS_DIR/zh/imagifly" "$AGENT_SKILLS_DIR/ja/imagifly"
@@ -37,9 +63,35 @@ rm -rf "$AGENT_SKILLS_DIR/imagifly-zh" "$AGENT_SKILLS_DIR/imagifly-ja" "$AGENT_S
 
 ## Update
 
+Run `npm install -g @imagifly/cli@latest`, then repeat the copy for the same locale that was installed. `--version` prints on stderr.
+
+English (`skills/en/imagifly/SKILL.md`):
+
 ```bash
 npm install -g @imagifly/cli@latest
-SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/imagifly/SKILL.md"
+SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/en/imagifly/SKILL.md"
+mkdir -p "$AGENT_SKILLS_DIR/imagifly"
+cp "$SKILL_SRC" "$AGENT_SKILLS_DIR/imagifly/SKILL.md"
+rm -rf "$AGENT_SKILLS_DIR/imagifly-zh" "$AGENT_SKILLS_DIR/imagifly-ja" "$AGENT_SKILLS_DIR/imagifly-cli" "$AGENT_SKILLS_DIR/en/imagifly" "$AGENT_SKILLS_DIR/zh/imagifly" "$AGENT_SKILLS_DIR/ja/imagifly"
+imagifly --version
+```
+
+Simplified Chinese (`skills/zh/imagifly/SKILL.md`):
+
+```bash
+npm install -g @imagifly/cli@latest
+SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/zh/imagifly/SKILL.md"
+mkdir -p "$AGENT_SKILLS_DIR/imagifly"
+cp "$SKILL_SRC" "$AGENT_SKILLS_DIR/imagifly/SKILL.md"
+rm -rf "$AGENT_SKILLS_DIR/imagifly-zh" "$AGENT_SKILLS_DIR/imagifly-ja" "$AGENT_SKILLS_DIR/imagifly-cli" "$AGENT_SKILLS_DIR/en/imagifly" "$AGENT_SKILLS_DIR/zh/imagifly" "$AGENT_SKILLS_DIR/ja/imagifly"
+imagifly --version
+```
+
+Japanese (`skills/ja/imagifly/SKILL.md`):
+
+```bash
+npm install -g @imagifly/cli@latest
+SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/ja/imagifly/SKILL.md"
 mkdir -p "$AGENT_SKILLS_DIR/imagifly"
 cp "$SKILL_SRC" "$AGENT_SKILLS_DIR/imagifly/SKILL.md"
 rm -rf "$AGENT_SKILLS_DIR/imagifly-zh" "$AGENT_SKILLS_DIR/imagifly-ja" "$AGENT_SKILLS_DIR/imagifly-cli" "$AGENT_SKILLS_DIR/en/imagifly" "$AGENT_SKILLS_DIR/zh/imagifly" "$AGENT_SKILLS_DIR/ja/imagifly"
@@ -116,7 +168,7 @@ A submit that returns `202` has already reserved credits. If you still have the 
 - Videos: https://imagifly.net/docs/api/videos
 - Errors: https://imagifly.net/docs/getting-started/errors
 - Agent setup for this CLI: https://imagifly.net/cli/setup.md
-- Agent skill: `skills/imagifly/SKILL.md`
+- Agent skills: `skills/en/imagifly/SKILL.md`, `skills/zh/imagifly/SKILL.md`, `skills/ja/imagifly/SKILL.md` (each installed as `imagifly`)
 
 ## Publish
 
