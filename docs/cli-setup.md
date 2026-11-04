@@ -16,7 +16,7 @@ Node.js 18+。
 npm install -g @imagifly/cli
 ```
 
-第 2 步 — 安装/更新 skill
+第 2 步 — 安装 skill
 
 Skill 正文是本仓库的 `skills/imagifly/SKILL.md`。技能 id 是 `imagifly`（不是 `imagifly-cli`）。全局安装后，同一份文件在 npm 包内：
 
@@ -100,6 +100,32 @@ English:
 登录或 `+me` 失败时，只输出失败信息：退出码，以及 stdout 里的 `error` 和 `message`。不要另写说明。
 
 成功回复里不要写这些：安装过程、tarball 或安装脚本审计、`~/.npm` 缓存处理、模型清单、文件权限、key 轮换建议。它们留在 skill 里，等用户要生成或列出模型时再用。不要把 `+me` 打印的 `models` 数组贴进成功回复。
+
+## 更新
+
+升级全局包，并覆盖已安装的 skill。把 `$AGENT_SKILLS_DIR` 换成当前 Agent 的 skills 目录。已有登录不用重做。不要用上面的安装成功文案。
+
+```bash
+npm install -g @imagifly/cli@latest
+SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/imagifly/SKILL.md"
+mkdir -p "$AGENT_SKILLS_DIR/imagifly"
+cp "$SKILL_SRC" "$AGENT_SKILLS_DIR/imagifly/SKILL.md"
+rm -rf "$AGENT_SKILLS_DIR/imagifly-cli"
+imagifly --version
+```
+
+`--version` 写在 stderr。用用户的语言告诉用户这个版本号即可。
+
+## 卸载
+
+删掉全局包和 skill 目录，包括遗留的 `imagifly-cli`。把 `$AGENT_SKILLS_DIR` 换成安装时用的同一目录。
+
+```bash
+npm uninstall -g @imagifly/cli
+rm -rf "$AGENT_SKILLS_DIR/imagifly" "$AGENT_SKILLS_DIR/imagifly-cli"
+```
+
+如果还要清掉已保存的 token，先运行 `imagifly auth logout`，再执行 `npm uninstall`（卸载之后就没有 `imagifly` 命令了）。不要用安装成功文案。
 
 ## 把上面四步做成功所需的事实
 

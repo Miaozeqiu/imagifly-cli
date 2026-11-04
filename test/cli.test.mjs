@@ -202,12 +202,29 @@ test("package metadata and docs", async () => {
   assert.match(readme, /npm publish --access public/);
   assert.match(readme, /@imagifly\/cli/);
   const skill = await readFile("skills/imagifly/SKILL.md", "utf8");
+  const setup = await readFile("docs/cli-setup.md", "utf8");
   assert.match(skill, /^name: imagifly$/m);
   assert.match(skill, /^# Imagifly$/m);
-  assert.doesNotMatch(skill, /imagifly-cli/);
+  assert.doesNotMatch(skill, /name: imagifly-cli/);
+  assert.doesNotMatch(skill, /skills\/imagifly-cli\//);
   assert.match(skill, /npm install -g @imagifly\/cli/);
   assert.doesNotMatch(skill, /claude mcp add|mcp\.json/);
-  const setup = await readFile("docs/cli-setup.md", "utf8");
+  const lifecycleLines = [
+    "npm install -g @imagifly/cli@latest",
+    'SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/imagifly/SKILL.md"',
+    'mkdir -p "$AGENT_SKILLS_DIR/imagifly"',
+    'cp "$SKILL_SRC" "$AGENT_SKILLS_DIR/imagifly/SKILL.md"',
+    'rm -rf "$AGENT_SKILLS_DIR/imagifly-cli"',
+    "npm uninstall -g @imagifly/cli",
+    'rm -rf "$AGENT_SKILLS_DIR/imagifly" "$AGENT_SKILLS_DIR/imagifly-cli"',
+    "imagifly auth logout",
+  ];
+  for (const line of lifecycleLines) {
+    const pattern = new RegExp(line.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+    assert.match(skill, pattern);
+    assert.match(readme, pattern);
+    assert.match(setup, pattern);
+  }
   assert.match(setup, /imagifly auth login --agent/);
   assert.match(setup, /skills\/imagifly\/SKILL\.md/);
   assert.match(setup, /\$AGENT_SKILLS_DIR\/imagifly\/SKILL\.md/);
@@ -246,7 +263,7 @@ test("help and version stay off stdout", async () => {
   const version = await run(["--version"]);
   assert.equal(version.code, 0);
   assert.equal(version.stdout, "");
-  assert.match(version.stderr, /0\.1\.4/);
+  assert.match(version.stderr, /0\.1\.5/);
 
   const none = await run([]);
   assert.equal(none.code, 2);

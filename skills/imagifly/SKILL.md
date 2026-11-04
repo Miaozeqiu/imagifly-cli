@@ -2,9 +2,10 @@
 name: imagifly
 description: >-
   Operate Imagifly image and video generation from the shell with the official
-  CLI (@imagifly/cli, binary imagifly). Use when installing the CLI, signing in
-  with OAuth, listing models, generating or downloading images and videos, or
-  reading JSON results. Do not use for MCP server setup.
+  CLI (@imagifly/cli, binary imagifly). Use when installing, updating, or
+  uninstalling the CLI and this skill, signing in with OAuth, listing models,
+  generating or downloading images and videos, or reading JSON results. Do not
+  use for MCP server setup.
 ---
 
 # Imagifly
@@ -24,7 +25,33 @@ imagifly --version
 
 The npm package is `@imagifly/cli`. The command is `imagifly`. This package ships the same skill at `skills/imagifly/SKILL.md`. Agent setup steps: https://imagifly.net/cli/setup.md
 
-When the user asked only to install or configure the CLI, follow that guide. After `imagifly +me` exits 0, reply with only the success block for the user's language in Verify below. Do not narrate the install.
+When the user asked only to install or configure the CLI, follow that guide. After `imagifly +me` exits 0, reply with only the success block for the user's language in Verify below. Do not narrate the install. An upgrade or removal uses Update or Uninstall below, not that success block.
+
+## Update
+
+Upgrade the global package, then overwrite this skill. Replace `$AGENT_SKILLS_DIR` with the directory this agent loads. Leave the saved login in place.
+
+```bash
+npm install -g @imagifly/cli@latest
+SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/imagifly/SKILL.md"
+mkdir -p "$AGENT_SKILLS_DIR/imagifly"
+cp "$SKILL_SRC" "$AGENT_SKILLS_DIR/imagifly/SKILL.md"
+rm -rf "$AGENT_SKILLS_DIR/imagifly-cli"
+imagifly --version
+```
+
+`--version` prints on stderr. Tell the user that version, in their language. Do not use the install success block.
+
+## Uninstall
+
+Remove the global package and this skill directory, including a leftover `imagifly-cli` directory. Replace `$AGENT_SKILLS_DIR` with the same directory used at install.
+
+```bash
+npm uninstall -g @imagifly/cli
+rm -rf "$AGENT_SKILLS_DIR/imagifly" "$AGENT_SKILLS_DIR/imagifly-cli"
+```
+
+To clear the saved token as well, run `imagifly auth logout` before `npm uninstall` (the command is gone after uninstall). Do not use the install success block.
 
 ## Auth
 

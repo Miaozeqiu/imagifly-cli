@@ -24,6 +24,28 @@ node dist/cli.js --help
 npm test
 ```
 
+## Update
+
+Upgrade the global package and overwrite the Agent skill. Replace `$AGENT_SKILLS_DIR` with the directory that agent loads. The same steps are in https://imagifly.net/cli/setup.md.
+
+```bash
+npm install -g @imagifly/cli@latest
+SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/imagifly/SKILL.md"
+mkdir -p "$AGENT_SKILLS_DIR/imagifly"
+cp "$SKILL_SRC" "$AGENT_SKILLS_DIR/imagifly/SKILL.md"
+rm -rf "$AGENT_SKILLS_DIR/imagifly-cli"
+imagifly --version
+```
+
+## Uninstall
+
+```bash
+npm uninstall -g @imagifly/cli
+rm -rf "$AGENT_SKILLS_DIR/imagifly" "$AGENT_SKILLS_DIR/imagifly-cli"
+```
+
+To clear the saved token as well, run `imagifly auth logout` before `npm uninstall`.
+
 ## Auth
 
 `imagifly auth login --agent Cursor` opens the browser. Sign in if needed, click Allow, and the CLI stores the access token. Revoke authorized agents later on https://imagifly.net/developer.
