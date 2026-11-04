@@ -1,11 +1,12 @@
 ---
 name: imagifly
 description: >-
-  Operate Imagifly image and video generation from the shell with the official
-  CLI (@imagifly/cli, binary imagifly). Use when installing, updating, or
-  uninstalling the CLI and this skill, signing in with OAuth, listing models,
-  generating or downloading images and videos, or reading JSON results. Do not
-  use for MCP server setup.
+  Imagifly 图片和视频生成 / Imagifly image and video generation with the official
+  CLI (@imagifly/cli, binary imagifly). 用于安装、更新、卸载、OAuth 登录、列出模型、生成或下载图片和视频、阅读 JSON 结果。
+  Use when installing, updating, or uninstalling the CLI and this skill, signing in
+  with OAuth, listing models, generating or downloading images and videos, or
+  reading JSON results. 不要用于 MCP 服务器配置。Do not use for MCP server setup.
+  画像と動画の生成にも使用：インストール、更新、アンインストール、OAuth ログイン、モデル一覧、画像・動画の生成とダウンロード、JSON 結果。MCP サーバーの設定には使わない。
 ---
 
 # Imagifly

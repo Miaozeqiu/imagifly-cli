@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { createServer } from "node:http";
-import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { mkdtemp, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -50,6 +50,16 @@ async function waitForMatch(child, readStderr, pattern) {
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
   throw new Error(`CLI did not match ${pattern}: ${readStderr()}`);
+}
+
+function foldedDescription(markdown) {
+  const frontmatter = markdown.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+  assert.ok(frontmatter, "skill frontmatter");
+  const description = frontmatter[1].match(/^description: >-\n([\s\S]+)/m);
+  assert.ok(description, "folded description");
+  const lines = description[1].split("\n");
+  assert.ok(lines.every((line) => /^ {2}\S/.test(line)), description[1]);
+  return lines.map((line) => line.slice(2).trimEnd()).join(" ");
 }
 
 function jsonStdout(result) {
@@ -203,9 +213,35 @@ test("package metadata and docs", async () => {
   assert.match(readme, /@imagifly\/cli/);
   const skill = await readFile("skills/imagifly/SKILL.md", "utf8");
   const setup = await readFile("docs/cli-setup.md", "utf8");
+  assert.deepEqual((await readdir("skills")).sort(), ["imagifly"]);
   assert.match(skill, /^name: imagifly$/m);
   assert.match(skill, /^# Imagifly$/m);
+  assert.match(skill, /Reply to the user in the language they are using/);
   assert.doesNotMatch(skill, /name: imagifly-cli/);
+  const description = foldedDescription(skill);
+  assert.ok(description.length > 0 && description.length <= 1024, description.length);
+  for (const phrase of [
+    "Imagifly 图片和视频生成",
+    "Imagifly image and video generation",
+    "安装、更新、卸载",
+    "OAuth 登录",
+    "列出模型",
+    "生成或下载图片和视频",
+    "阅读 JSON 结果",
+    "不要用于 MCP 服务器配置",
+    "installing, updating, or uninstalling",
+    "signing in with OAuth",
+    "listing models",
+    "generating or downloading images and videos",
+    "reading JSON results",
+    "Do not use for MCP server setup",
+    "インストール、更新、アンインストール",
+    "OAuth ログイン",
+    "モデル一覧",
+    "MCP サーバーの設定には使わない",
+  ]) {
+    assert.match(description, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  }
   assert.doesNotMatch(skill, /skills\/imagifly-cli\//);
   assert.match(skill, /npm install -g @imagifly\/cli/);
   assert.doesNotMatch(skill, /claude mcp add|mcp\.json/);
@@ -263,7 +299,7 @@ test("help and version stay off stdout", async () => {
   const version = await run(["--version"]);
   assert.equal(version.code, 0);
   assert.equal(version.stdout, "");
-  assert.match(version.stderr, /0\.1\.5/);
+  assert.match(version.stderr, /0\.1\.6/);
 
   const none = await run([]);
   assert.equal(none.code, 2);
