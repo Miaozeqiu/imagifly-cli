@@ -201,18 +201,37 @@ test("package metadata and docs", async () => {
   const readme = await readFile("README.md", "utf8");
   assert.match(readme, /npm publish --access public/);
   assert.match(readme, /@imagifly\/cli/);
-  const skill = await readFile("skills/imagifly-cli/SKILL.md", "utf8");
+  const skill = await readFile("skills/imagifly/SKILL.md", "utf8");
+  assert.match(skill, /^name: imagifly$/m);
+  assert.match(skill, /^# Imagifly$/m);
+  assert.doesNotMatch(skill, /imagifly-cli/);
   assert.match(skill, /npm install -g @imagifly\/cli/);
   assert.doesNotMatch(skill, /claude mcp add|mcp\.json/);
   const setup = await readFile("docs/cli-setup.md", "utf8");
   assert.match(setup, /imagifly auth login --agent/);
-  assert.match(setup, /只需输出以下内容/);
+  assert.match(setup, /skills\/imagifly\/SKILL\.md/);
+  assert.match(setup, /\$AGENT_SKILLS_DIR\/imagifly\/SKILL\.md/);
+  assert.doesNotMatch(setup, /skills\/imagifly-cli\//);
   assert.match(setup, /https:\/\/imagifly\.net\/cli\/setup\.md/);
   assert.doesNotMatch(setup, /https:\/\/imagifly\.net\/cli\/skill\.md/);
   assert.doesNotMatch(setup, /raw\.githubusercontent\.com/);
-  const successLine = "Imagifly CLI 已安装并登录成功，可以用来生成图片和视频了";
-  assert.match(setup, new RegExp(successLine));
-  assert.match(skill, new RegExp(successLine));
+  const successBlocks = [
+    "Imagifly CLI 已安装并登录成功，可以用来生成图片和视频了",
+    "Imagifly CLI is installed and signed in. You can generate images and videos.",
+    "Imagifly CLI のインストールとログインが完了しました。画像と動画を生成できます。",
+    "Generate an image of a teahouse in the rain",
+    "雨の日の茶館の画像を生成して",
+    "也可以直接描述你的生图/生视频需求，让 Agent 帮你处理。",
+    "Or just describe the image or video you want, and the Agent will handle it.",
+  ];
+  for (const line of successBlocks) {
+    assert.match(setup, new RegExp(line.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+    assert.match(skill, new RegExp(line.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  }
+  assert.match(skill, /any other language: the English block/i);
+  assert.match(setup, /以上都不是：用英语这一段/);
+  assert.doesNotMatch(skill, /do not translate it/i);
+  assert.doesNotMatch(setup, /只需输出以下内容/);
   const license = await readFile("LICENSE", "utf8");
   assert.match(license, /MIT License/);
 });
@@ -227,7 +246,7 @@ test("help and version stay off stdout", async () => {
   const version = await run(["--version"]);
   assert.equal(version.code, 0);
   assert.equal(version.stdout, "");
-  assert.match(version.stderr, /0\.1\.3/);
+  assert.match(version.stderr, /0\.1\.4/);
 
   const none = await run([]);
   assert.equal(none.code, 2);

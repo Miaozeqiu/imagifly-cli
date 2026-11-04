@@ -85,7 +85,7 @@ A submit that returns `202` has already reserved credits. If you still have the 
 - Videos: https://imagifly.net/docs/api/videos
 - Errors: https://imagifly.net/docs/getting-started/errors
 - Agent setup for this CLI: https://imagifly.net/cli/setup.md
-- Agent skill: `skills/imagifly-cli/SKILL.md` in this package
+- Agent skill: `skills/imagifly/SKILL.md` in this package
 
 ## Publish
 
