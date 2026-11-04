@@ -14,7 +14,7 @@ Generate images and videos by shelling out to `imagifly`. Stdout is one JSON obj
 
 This skill does not install or configure the Imagifly MCP server. MCP docs: https://imagifly.net/docs/agents.
 
-Picker name: `imagifly`. Simplified Chinese is `imagifly-zh`. Japanese is `imagifly-ja`. Install only the folder that matches the user's language, then delete the other two and a leftover `imagifly-cli` directory so the picker shows one name.
+The picker name is always `imagifly`. This file's description is English. Simplified Chinese is `skills/zh/imagifly/SKILL.md`. Japanese is `skills/ja/imagifly/SKILL.md`. Copy only the file that matches the user's language into `$AGENT_SKILLS_DIR/imagifly/SKILL.md`, then delete leftover `imagifly-zh`, `imagifly-ja`, and `imagifly-cli` directories.
 
 ## Install
 
@@ -22,26 +22,26 @@ Node.js 18+.
 
 ```bash
 npm install -g @imagifly/cli
-SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/imagifly/SKILL.md"
+SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/en/imagifly/SKILL.md"
 mkdir -p "$AGENT_SKILLS_DIR/imagifly"
 cp "$SKILL_SRC" "$AGENT_SKILLS_DIR/imagifly/SKILL.md"
 rm -rf "$AGENT_SKILLS_DIR/imagifly-zh" "$AGENT_SKILLS_DIR/imagifly-ja" "$AGENT_SKILLS_DIR/imagifly-cli"
 imagifly --version
 ```
 
-The npm package is `@imagifly/cli`. The command is `imagifly`. This file is `skills/imagifly/SKILL.md`. The package also ships `skills/imagifly-zh/SKILL.md` and `skills/imagifly-ja/SKILL.md`. Agent setup steps: https://imagifly.net/cli/setup.md
+The npm package is `@imagifly/cli`. The command is `imagifly`. This file is `skills/en/imagifly/SKILL.md`. The package also ships `skills/zh/imagifly/SKILL.md` and `skills/ja/imagifly/SKILL.md`. Agent setup steps: https://imagifly.net/cli/setup.md
 
-Replace `$AGENT_SKILLS_DIR` with the directory this agent loads. The `rm` drops the other locale skills and the legacy `imagifly-cli` folder. Do not copy those other skills in an English install.
+Replace `$AGENT_SKILLS_DIR` with the directory this agent loads. The `rm` drops leftover `imagifly-zh`, `imagifly-ja`, and `imagifly-cli` directories. It does not remove the `imagifly` folder just copied. Do not copy the other locale files in an English install.
 
 When the user asked only to install or configure the CLI, follow that guide. After `imagifly +me` exits 0, reply with only the success block for the user's language in Verify below. Do not narrate the install. An upgrade or removal uses Update or Uninstall below, not that success block.
 
 ## Update
 
-Upgrade the global package, then overwrite `imagifly` and remove the other locale folders. Replace `$AGENT_SKILLS_DIR` with the directory this agent loads. Leave the saved login in place.
+Upgrade the global package, then overwrite `$AGENT_SKILLS_DIR/imagifly/SKILL.md` from this English file and remove leftover locale directories. Replace `$AGENT_SKILLS_DIR` with the directory this agent loads. Leave the saved login in place.
 
 ```bash
 npm install -g @imagifly/cli@latest
-SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/imagifly/SKILL.md"
+SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/en/imagifly/SKILL.md"
 mkdir -p "$AGENT_SKILLS_DIR/imagifly"
 cp "$SKILL_SRC" "$AGENT_SKILLS_DIR/imagifly/SKILL.md"
 rm -rf "$AGENT_SKILLS_DIR/imagifly-zh" "$AGENT_SKILLS_DIR/imagifly-ja" "$AGENT_SKILLS_DIR/imagifly-cli"
@@ -52,7 +52,7 @@ imagifly --version
 
 ## Uninstall
 
-Remove the global package and every Imagifly skill directory the picker might show: `imagifly`, `imagifly-zh`, `imagifly-ja`, and a leftover `imagifly-cli`. Replace `$AGENT_SKILLS_DIR` with the same directory used at install.
+Remove the global package, the installed skill directory `imagifly`, and leftover `imagifly-zh`, `imagifly-ja`, and `imagifly-cli` directories. Replace `$AGENT_SKILLS_DIR` with the same directory used at install.
 
 ```bash
 npm uninstall -g @imagifly/cli
