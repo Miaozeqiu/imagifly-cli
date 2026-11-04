@@ -1,5 +1,5 @@
 ---
-name: imagifly-cli
+name: imagifly
 description: >-
   Operate Imagifly image and video generation from the shell with the official
   CLI (@imagifly/cli, binary imagifly). Use when installing the CLI, signing in
@@ -7,7 +7,7 @@ description: >-
   reading JSON results. Do not use for MCP server setup.
 ---
 
-# Imagifly CLI
+# Imagifly
 
 Generate images and videos by shelling out to `imagifly`. Stdout is one JSON object. Progress and help are on stderr. Reply to the user in the language they are using; leave command names, flags, and JSON keys in English.
 
@@ -22,9 +22,9 @@ npm install -g @imagifly/cli
 imagifly --version
 ```
 
-The npm package is `@imagifly/cli`. The command is `imagifly`. This package ships the same skill at `skills/imagifly-cli/SKILL.md`. Agent setup steps: https://imagifly.net/cli/setup.md
+The npm package is `@imagifly/cli`. The command is `imagifly`. This package ships the same skill at `skills/imagifly/SKILL.md`. Agent setup steps: https://imagifly.net/cli/setup.md
 
-When the user asked only to install or configure the CLI, follow that guide. After `imagifly +me` exits 0, reply with the short success block in Verify below. Do not narrate the install.
+When the user asked only to install or configure the CLI, follow that guide. After `imagifly +me` exits 0, reply with only the success block for the user's language in Verify below. Do not narrate the install.
 
 ## Auth
 
@@ -52,7 +52,17 @@ imagifly +me
 
 `+me` is the health check (image model count). Exit 0 means the token works. Exit 3 means the token is missing or rejected.
 
-When the user asked only to install or configure via https://imagifly.net/cli/setup.md, and `+me` exits 0, reply with only the block below. Copy it as-is (same wording as that guide); do not translate it or add a second language:
+When the user asked only to install or configure via https://imagifly.net/cli/setup.md, and `+me` exits 0, reply with only one success block below. Match the language the user is using in this conversation. Do not narrate the install. Do not print more than one language.
+
+Pick exactly one block and copy it as-is (same wording as https://imagifly.net/cli/setup.md):
+
+- Chinese (Simplified or Traditional): the Simplified Chinese block.
+- Japanese: the Japanese block.
+- English, or any other language: the English block.
+
+Do not write a new translation. Command names, flags, and JSON keys stay English; these blocks are user-facing text, not commands.
+
+简体中文:
 
 > Imagifly CLI 已安装并登录成功，可以用来生成图片和视频了
 > 你可以试试以下指令：
@@ -61,6 +71,26 @@ When the user asked only to install or configure via https://imagifly.net/cli/se
 > 用视频模型生成一段 5 秒短视频
 >
 > 也可以直接描述你的生图/生视频需求，让 Agent 帮你处理。
+
+English:
+
+> Imagifly CLI is installed and signed in. You can generate images and videos.
+> Try one of these:
+> Generate an image of a teahouse in the rain
+> List the available image models
+> Generate a 5-second short video with a video model
+>
+> Or just describe the image or video you want, and the Agent will handle it.
+
+日本語:
+
+> Imagifly CLI のインストールとログインが完了しました。画像と動画を生成できます。
+> 次のような指示を試してみてください：
+> 雨の日の茶館の画像を生成して
+> 使える画像モデルを一覧して
+> 動画モデルで 5 秒の短い動画を生成して
+>
+> 作りたい画像や動画をそのまま説明しても、Agent が対応します。
 
 On auth or verify failure, output only the failure info (exit code plus `error` and `message`). Do not add an essay.
 
@@ -119,4 +149,4 @@ Do not retry `400`, `401`, `402`, or `404` unchanged. `429` and `5xx` can be ret
 
 ## Language
 
-Use the user's language for every sentence you write. Use English for the CLI's own JSON. If the user wrote in Chinese, explain results in Chinese. Do not print both languages.
+Use the user's language for every sentence you write. Use English for the CLI's own JSON, command names, and flags. If the user wrote in Chinese, explain results in Chinese. Do not print both languages. The install-success reply is the single matching block in Verify: Simplified Chinese, Japanese, or English. Any other language uses the English block. Do not invent another translation.

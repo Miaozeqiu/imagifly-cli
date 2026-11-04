@@ -6,7 +6,7 @@ Agent-first setup for the `imagifly` binary (`npm` package `@imagifly/cli`).
 
 ## 快速开始（AI Agent）
 
-做完下面四步。`imagifly +me` 退出码为 0 之后，给用户的回复只有「只需输出以下内容」里的那一段。
+做完下面四步。`imagifly +me` 退出码为 0 之后，只回复第 4 步里、对应用户语言的那一段成功文案。不要叙述安装过程，不要同时输出多种语言。
 
 第 1 步 — 安装 CLI
 
@@ -18,16 +18,17 @@ npm install -g @imagifly/cli
 
 第 2 步 — 安装/更新 skill
 
-Skill 正文是本仓库的 `skills/imagifly-cli/SKILL.md`。全局安装后，同一份文件在 npm 包内：
+Skill 正文是本仓库的 `skills/imagifly/SKILL.md`。技能 id 是 `imagifly`（不是 `imagifly-cli`）。全局安装后，同一份文件在 npm 包内：
 
-`<npm root -g>/@imagifly/cli/skills/imagifly-cli/SKILL.md`
+`<npm root -g>/@imagifly/cli/skills/imagifly/SKILL.md`
 
-复制到当前 Agent 会加载的 skills 目录（把 `$AGENT_SKILLS_DIR` 换成该目录）：
+复制到当前 Agent 会加载的 skills 目录（把 `$AGENT_SKILLS_DIR` 换成该目录）。目录名用 `imagifly`。如果之前装过旧目录 `imagifly-cli`，删掉它，避免选择器里留下旧名字：
 
 ```bash
-SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/imagifly-cli/SKILL.md"
-mkdir -p "$AGENT_SKILLS_DIR/imagifly-cli"
-cp "$SKILL_SRC" "$AGENT_SKILLS_DIR/imagifly-cli/SKILL.md"
+SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/imagifly/SKILL.md"
+mkdir -p "$AGENT_SKILLS_DIR/imagifly"
+cp "$SKILL_SRC" "$AGENT_SKILLS_DIR/imagifly/SKILL.md"
+rm -rf "$AGENT_SKILLS_DIR/imagifly-cli"
 ```
 
 本安装指南的稳定地址：
@@ -58,7 +59,15 @@ imagifly +me
 
 退出码 `0` 表示登录可用。
 
-验证完成后，只需输出以下内容：
+验证成功后，只回复下面其中一段，语言跟用户这场对话一致。不要叙述安装过程，不要同时输出多种语言。
+
+- 用户在用中文（简体或繁体）：用简体中文这一段。
+- 用户在用日语：用日语这一段。
+- 用户在用英语，或者以上都不是：用英语这一段。
+
+选定后按原文输出。不要再翻译成别的语言，也不要补第二语言。命令名、flag、JSON 字段保持英文；这三段是给用户看的说明，不是命令。
+
+简体中文：
 
 > Imagifly CLI 已安装并登录成功，可以用来生成图片和视频了
 > 你可以试试以下指令：
@@ -67,6 +76,26 @@ imagifly +me
 > 用视频模型生成一段 5 秒短视频
 >
 > 也可以直接描述你的生图/生视频需求，让 Agent 帮你处理。
+
+English:
+
+> Imagifly CLI is installed and signed in. You can generate images and videos.
+> Try one of these:
+> Generate an image of a teahouse in the rain
+> List the available image models
+> Generate a 5-second short video with a video model
+>
+> Or just describe the image or video you want, and the Agent will handle it.
+
+日本語:
+
+> Imagifly CLI のインストールとログインが完了しました。画像と動画を生成できます。
+> 次のような指示を試してみてください：
+> 雨の日の茶館の画像を生成して
+> 使える画像モデルを一覧して
+> 動画モデルで 5 秒の短い動画を生成して
+>
+> 作りたい画像や動画をそのまま説明しても、Agent が対応します。
 
 登录或 `+me` 失败时，只输出失败信息：退出码，以及 stdout 里的 `error` 和 `message`。不要另写说明。
 
@@ -80,7 +109,7 @@ imagifly +me
 - Access token 存在 `~/.config/imagifly/config.json`（mode `600`）。`IMAGIFLY_API_KEY` 覆盖该文件；单次命令的 `--api-key` 覆盖两者。`imagifly auth status` 只打印 hint，不打印 token。
 - `+me` 调用 `GET /api/v1/images/models`。成功时 stdout 是 `{ "ok": true, "imageModelCount": N, "models": ["..."] }`。退出码 `0` 表示成功。退出码 `3` 表示未登录或令牌被拒绝。
 - 退出码：`0` 成功，`2` 参数错误，`3` 未授权，`4` API 或生成失败，`1` 意外失败。按 JSON 字段 `error` 判断。
-- 生成和查询命令见已安装 skill：`<npm root -g>/@imagifly/cli/skills/imagifly-cli/SKILL.md`
+- 生成和查询命令见已安装 skill：`<npm root -g>/@imagifly/cli/skills/imagifly/SKILL.md`
 
 ## 控制台
 

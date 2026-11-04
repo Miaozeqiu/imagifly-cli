@@ -1,6 +1,6 @@
 {
   "name": "@imagifly/cli",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Agent-first CLI for the Imagifly image and video API",
   "type": "module",
   "bin": {
