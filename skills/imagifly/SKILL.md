@@ -1,20 +1,22 @@
 ---
 name: imagifly
 description: >-
-  Operate Imagifly image and video generation with the official CLI
-  (@imagifly/cli, binary imagifly). Use when installing, updating, or
-  uninstalling the CLI and this skill, signing in with OAuth, listing models,
-  generating or downloading images and videos, or reading JSON results. Do not
-  use for MCP server setup.
+  Imagifly image and video generation / 图片和视频生成 / 画像と動画の生成.
+  Official CLI (@imagifly/cli, binary imagifly). Use when installing, updating,
+  or uninstalling the CLI and this skill, signing in with OAuth, listing models,
+  generating or downloading images and videos, or reading JSON results.
+  用于安装、更新、卸载、OAuth 登录、列出模型、生成或下载图片和视频、阅读 JSON 结果。
+  インストール、更新、アンインストール、OAuth ログイン、モデル一覧、画像・動画の生成とダウンロード、JSON 結果の確認。
+  Do not use for MCP server setup. 不要用于 MCP 服务器配置。MCP サーバーの設定には使わない。
 ---
 
 # Imagifly
 
-Generate images and videos by shelling out to `imagifly`. Stdout is one JSON object. Progress and help are on stderr. Reply to the user in the language they are using; leave command names, flags, and JSON keys in English.
+Generate images and videos by shelling out to `imagifly`. Stdout is one JSON object. Progress and help are on stderr. Reply in the language the user is writing. 用用户正在写的语言回复。ユーザーが書いている言語で返す。Leave command names, flags, and JSON keys in English.
 
 This skill does not install or configure the Imagifly MCP server. MCP docs: https://imagifly.net/docs/agents.
 
-The picker name is always `imagifly`. This file's description is English. Simplified Chinese is `skills/zh/imagifly/SKILL.md`. Japanese is `skills/ja/imagifly/SKILL.md`. Copy only the file that matches the user's language into `$AGENT_SKILLS_DIR/imagifly/SKILL.md`, then delete leftover `imagifly-zh`, `imagifly-ja`, and `imagifly-cli` directories.
+The picker name is `imagifly`. There is one skill file. Do not choose a locale file.
 
 ## Install
 
@@ -22,29 +24,29 @@ Node.js 18+.
 
 ```bash
 npm install -g @imagifly/cli
-SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/en/imagifly/SKILL.md"
+SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/imagifly/SKILL.md"
 mkdir -p "$AGENT_SKILLS_DIR/imagifly"
 cp "$SKILL_SRC" "$AGENT_SKILLS_DIR/imagifly/SKILL.md"
-rm -rf "$AGENT_SKILLS_DIR/imagifly-zh" "$AGENT_SKILLS_DIR/imagifly-ja" "$AGENT_SKILLS_DIR/imagifly-cli"
+rm -rf "$AGENT_SKILLS_DIR/imagifly-zh" "$AGENT_SKILLS_DIR/imagifly-ja" "$AGENT_SKILLS_DIR/imagifly-cli" "$AGENT_SKILLS_DIR/en/imagifly" "$AGENT_SKILLS_DIR/zh/imagifly" "$AGENT_SKILLS_DIR/ja/imagifly"
 imagifly --version
 ```
 
-The npm package is `@imagifly/cli`. The command is `imagifly`. This file is `skills/en/imagifly/SKILL.md`. The package also ships `skills/zh/imagifly/SKILL.md` and `skills/ja/imagifly/SKILL.md`. Agent setup steps: https://imagifly.net/cli/setup.md
+The npm package is `@imagifly/cli`. The command is `imagifly`. This file is `skills/imagifly/SKILL.md`. Agent setup steps: https://imagifly.net/cli/setup.md
 
-Replace `$AGENT_SKILLS_DIR` with the directory this agent loads. The `rm` drops leftover `imagifly-zh`, `imagifly-ja`, and `imagifly-cli` directories. It does not remove the `imagifly` folder just copied. Do not copy the other locale files in an English install.
+Replace `$AGENT_SKILLS_DIR` with the directory this agent loads. The `rm` drops leftover `imagifly-zh`, `imagifly-ja`, and `imagifly-cli` directories, plus old `en/imagifly`, `zh/imagifly`, and `ja/imagifly` copies. It does not remove the `imagifly` folder just copied.
 
 When the user asked only to install or configure the CLI, follow that guide. After `imagifly +me` exits 0, reply with only the success block for the user's language in Verify below. Do not narrate the install. An upgrade or removal uses Update or Uninstall below, not that success block.
 
 ## Update
 
-Upgrade the global package, then overwrite `$AGENT_SKILLS_DIR/imagifly/SKILL.md` from this English file and remove leftover locale directories. Replace `$AGENT_SKILLS_DIR` with the directory this agent loads. Leave the saved login in place.
+Upgrade the global package, then overwrite `$AGENT_SKILLS_DIR/imagifly/SKILL.md` from this same file. Replace `$AGENT_SKILLS_DIR` with the directory this agent loads. Leave the saved login in place.
 
 ```bash
 npm install -g @imagifly/cli@latest
-SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/en/imagifly/SKILL.md"
+SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/imagifly/SKILL.md"
 mkdir -p "$AGENT_SKILLS_DIR/imagifly"
 cp "$SKILL_SRC" "$AGENT_SKILLS_DIR/imagifly/SKILL.md"
-rm -rf "$AGENT_SKILLS_DIR/imagifly-zh" "$AGENT_SKILLS_DIR/imagifly-ja" "$AGENT_SKILLS_DIR/imagifly-cli"
+rm -rf "$AGENT_SKILLS_DIR/imagifly-zh" "$AGENT_SKILLS_DIR/imagifly-ja" "$AGENT_SKILLS_DIR/imagifly-cli" "$AGENT_SKILLS_DIR/en/imagifly" "$AGENT_SKILLS_DIR/zh/imagifly" "$AGENT_SKILLS_DIR/ja/imagifly"
 imagifly --version
 ```
 
@@ -52,11 +54,11 @@ imagifly --version
 
 ## Uninstall
 
-Remove the global package, the installed skill directory `imagifly`, and leftover `imagifly-zh`, `imagifly-ja`, and `imagifly-cli` directories. Replace `$AGENT_SKILLS_DIR` with the same directory used at install.
+Remove the global package, `$AGENT_SKILLS_DIR/imagifly`, and the leftover directories from older installs. Replace `$AGENT_SKILLS_DIR` with the same directory used at install.
 
 ```bash
 npm uninstall -g @imagifly/cli
-rm -rf "$AGENT_SKILLS_DIR/imagifly" "$AGENT_SKILLS_DIR/imagifly-zh" "$AGENT_SKILLS_DIR/imagifly-ja" "$AGENT_SKILLS_DIR/imagifly-cli"
+rm -rf "$AGENT_SKILLS_DIR/imagifly" "$AGENT_SKILLS_DIR/imagifly-zh" "$AGENT_SKILLS_DIR/imagifly-ja" "$AGENT_SKILLS_DIR/imagifly-cli" "$AGENT_SKILLS_DIR/en/imagifly" "$AGENT_SKILLS_DIR/zh/imagifly" "$AGENT_SKILLS_DIR/ja/imagifly"
 ```
 
 To clear the saved token as well, run `imagifly auth logout` before `npm uninstall` (the command is gone after uninstall). Do not use the install success block.
@@ -87,9 +89,9 @@ imagifly +me
 
 `+me` is the health check (image model count). Exit 0 means the token works. Exit 3 means the token is missing or rejected.
 
-When the user asked only to install or configure via https://imagifly.net/cli/setup.md, and `+me` exits 0, reply with only one success block below. Match the language the user is using in this conversation. Do not narrate the install. Do not print more than one language.
+When the user asked only to install or configure via https://imagifly.net/cli/setup.md, and `+me` exits 0, reply with the one block below that matches how the user is writing. Do not narrate the install. Do not print more than one language. Do not choose a different skill file.
 
-Pick exactly one block and copy it as-is (same wording as https://imagifly.net/cli/setup.md):
+Copy that block as-is (same wording as https://imagifly.net/cli/setup.md):
 
 - Chinese (Simplified or Traditional): the Simplified Chinese block.
 - Japanese: the Japanese block.
