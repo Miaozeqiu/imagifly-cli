@@ -24,16 +24,71 @@ node dist/cli.js --help
 npm test
 ```
 
+## Agent skills
+
+The package ships three skills. Install only the one that matches the user's language. The picker shows that folder name: `imagifly`, `imagifly-zh`, or `imagifly-ja`. Replace `$AGENT_SKILLS_DIR` with the directory that agent loads. The copy removes the other locale folders and a leftover `imagifly-cli` directory. Full steps: https://imagifly.net/cli/setup.md
+
+English, or any other language (`imagifly`):
+
+```bash
+SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/imagifly/SKILL.md"
+mkdir -p "$AGENT_SKILLS_DIR/imagifly"
+cp "$SKILL_SRC" "$AGENT_SKILLS_DIR/imagifly/SKILL.md"
+rm -rf "$AGENT_SKILLS_DIR/imagifly-zh" "$AGENT_SKILLS_DIR/imagifly-ja" "$AGENT_SKILLS_DIR/imagifly-cli"
+```
+
+Simplified Chinese, including Traditional (`imagifly-zh`):
+
+```bash
+SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/imagifly-zh/SKILL.md"
+mkdir -p "$AGENT_SKILLS_DIR/imagifly-zh"
+cp "$SKILL_SRC" "$AGENT_SKILLS_DIR/imagifly-zh/SKILL.md"
+rm -rf "$AGENT_SKILLS_DIR/imagifly" "$AGENT_SKILLS_DIR/imagifly-ja" "$AGENT_SKILLS_DIR/imagifly-cli"
+```
+
+Japanese (`imagifly-ja`):
+
+```bash
+SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/imagifly-ja/SKILL.md"
+mkdir -p "$AGENT_SKILLS_DIR/imagifly-ja"
+cp "$SKILL_SRC" "$AGENT_SKILLS_DIR/imagifly-ja/SKILL.md"
+rm -rf "$AGENT_SKILLS_DIR/imagifly" "$AGENT_SKILLS_DIR/imagifly-zh" "$AGENT_SKILLS_DIR/imagifly-cli"
+```
+
 ## Update
 
-Upgrade the global package and overwrite the Agent skill. Replace `$AGENT_SKILLS_DIR` with the directory that agent loads. The same steps are in https://imagifly.net/cli/setup.md.
+Upgrade the global package, then repeat the copy for the skill already chosen above so that `SKILL.md` is overwritten.
+
+English (`imagifly`):
 
 ```bash
 npm install -g @imagifly/cli@latest
 SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/imagifly/SKILL.md"
 mkdir -p "$AGENT_SKILLS_DIR/imagifly"
 cp "$SKILL_SRC" "$AGENT_SKILLS_DIR/imagifly/SKILL.md"
-rm -rf "$AGENT_SKILLS_DIR/imagifly-cli"
+rm -rf "$AGENT_SKILLS_DIR/imagifly-zh" "$AGENT_SKILLS_DIR/imagifly-ja" "$AGENT_SKILLS_DIR/imagifly-cli"
+imagifly --version
+```
+
+Simplified Chinese (`imagifly-zh`):
+
+```bash
+npm install -g @imagifly/cli@latest
+SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/imagifly-zh/SKILL.md"
+mkdir -p "$AGENT_SKILLS_DIR/imagifly-zh"
+cp "$SKILL_SRC" "$AGENT_SKILLS_DIR/imagifly-zh/SKILL.md"
+rm -rf "$AGENT_SKILLS_DIR/imagifly" "$AGENT_SKILLS_DIR/imagifly-ja" "$AGENT_SKILLS_DIR/imagifly-cli"
+imagifly --version
+```
+
+Japanese (`imagifly-ja`):
+
+```bash
+npm install -g @imagifly/cli@latest
+SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/imagifly-ja/SKILL.md"
+mkdir -p "$AGENT_SKILLS_DIR/imagifly-ja"
+cp "$SKILL_SRC" "$AGENT_SKILLS_DIR/imagifly-ja/SKILL.md"
+rm -rf "$AGENT_SKILLS_DIR/imagifly" "$AGENT_SKILLS_DIR/imagifly-zh" "$AGENT_SKILLS_DIR/imagifly-cli"
 imagifly --version
 ```
 
@@ -41,7 +96,7 @@ imagifly --version
 
 ```bash
 npm uninstall -g @imagifly/cli
-rm -rf "$AGENT_SKILLS_DIR/imagifly" "$AGENT_SKILLS_DIR/imagifly-cli"
+rm -rf "$AGENT_SKILLS_DIR/imagifly" "$AGENT_SKILLS_DIR/imagifly-zh" "$AGENT_SKILLS_DIR/imagifly-ja" "$AGENT_SKILLS_DIR/imagifly-cli"
 ```
 
 To clear the saved token as well, run `imagifly auth logout` before `npm uninstall`.
@@ -107,7 +162,7 @@ A submit that returns `202` has already reserved credits. If you still have the 
 - Videos: https://imagifly.net/docs/api/videos
 - Errors: https://imagifly.net/docs/getting-started/errors
 - Agent setup for this CLI: https://imagifly.net/cli/setup.md
-- Agent skill: `skills/imagifly/SKILL.md` in this package
+- Agent skills: `skills/imagifly/SKILL.md`, `skills/imagifly-zh/SKILL.md`, `skills/imagifly-ja/SKILL.md`
 
 ## Publish
 
