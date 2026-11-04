@@ -212,43 +212,19 @@ test("package metadata and docs", async () => {
   assert.match(readme, /npm publish --access public/);
   assert.match(readme, /@imagifly\/cli/);
   const setup = await readFile("docs/cli-setup.md", "utf8");
-  const locales = ["en", "zh", "ja"];
-  assert.deepEqual((await readdir("skills")).sort(), [...locales].sort());
-  const skills = Object.fromEntries(
-    await Promise.all(
-      locales.map(async (locale) => {
-        assert.deepEqual(await readdir(`skills/${locale}`), ["imagifly"]);
-        return [locale, await readFile(`skills/${locale}/imagifly/SKILL.md`, "utf8")];
-      }),
-    ),
-  );
-  const descriptions = Object.fromEntries(locales.map((locale) => [locale, foldedDescription(skills[locale])]));
-  const installedCopy = 'cp "$SKILL_SRC" "$AGENT_SKILLS_DIR/imagifly/SKILL.md"';
-  const leftoverRm = 'rm -rf "$AGENT_SKILLS_DIR/imagifly-zh" "$AGENT_SKILLS_DIR/imagifly-ja" "$AGENT_SKILLS_DIR/imagifly-cli"';
-  for (const locale of locales) {
-    assert.match(skills[locale], /^name: imagifly$/m);
-    assert.doesNotMatch(skills[locale], /^name: imagifly-(?:zh|ja|cli)$/m);
-    assert.match(skills[locale], /^# Imagifly$/m);
-    assert.doesNotMatch(skills[locale], /skills\/imagifly-cli\//);
-    assert.doesNotMatch(skills[locale], /claude mcp add|mcp\.json/);
-    assert.match(skills[locale], /npm install -g @imagifly\/cli/);
-    assert.ok(
-      descriptions[locale].length > 0 && descriptions[locale].length <= 1024,
-      `${locale} ${descriptions[locale].length}`,
-    );
-    const source = `SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/${locale}/imagifly/SKILL.md"`;
-    assert.match(skills[locale], new RegExp(source.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
-    assert.match(skills[locale], new RegExp(installedCopy.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
-    assert.match(skills[locale], new RegExp(leftoverRm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
-    assert.doesNotMatch(skills[locale], /cp "\$SKILL_SRC" "\$AGENT_SKILLS_DIR\/imagifly-(?:zh|ja)\/SKILL.md"/);
-    for (const other of locales.filter((item) => item !== locale)) {
-      const otherSource = `skills/${other}/imagifly/SKILL.md"`;
-      assert.doesNotMatch(
-        skills[locale],
-        new RegExp(String.raw`SKILL_SRC="\$\(npm root -g\)/@imagifly/cli/${otherSource.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`),
-      );
-    }
-  }
+  assert.deepEqual(await readdir("skills"), ["imagifly"]);
+  assert.deepEqual(await readdir("skills/imagifly"), ["SKILL.md"]);
+  const skill = await readFile("skills/imagifly/SKILL.md", "utf8");
+  const description = foldedDescription(skill);
+  assert.match(skill, /^name: imagifly$/m);
+  assert.doesNotMatch(skill, /^name: imagifly-/m);
+  assert.match(skill, /^# Imagifly$/m);
+  assert.doesNotMatch(skill, /skills\/imagifly-cli\//);
+  assert.doesNotMatch(skill, /skills\/(?:en|zh|ja)\/imagifly\//);
+  assert.doesNotMatch(skill, /claude mcp add|mcp\.json/);
+  assert.match(skill, /npm install -g @imagifly\/cli/);
+  assert.match(skill, /Do not choose a different skill file/);
+  assert.ok(description.length > 0 && description.length <= 1024, description.length);
   for (const phrase of [
     "installing, updating, or uninstalling",
     "signing in with OAuth",
@@ -256,40 +232,54 @@ test("package metadata and docs", async () => {
     "generating or downloading images and videos",
     "reading JSON results",
     "Do not use for MCP server setup",
+    "用于安装、更新、卸载",
+    "OAuth 登录",
+    "列出模型",
+    "生成或下载图片和视频",
+    "阅读 JSON 结果",
+    "不要用于 MCP 服务器配置",
+    "インストール、更新、アンインストール",
+    "OAuth ログイン",
+    "モデル一覧",
+    "画像・動画の生成とダウンロード",
+    "JSON 結果の確認",
+    "MCP サーバーの設定には使わない",
   ]) {
-    assert.match(descriptions.en, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+    assert.match(description, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   }
-  assert.doesNotMatch(descriptions.en, /[\u3040-\u30ff\u3400-\u9fff]/);
-  for (const phrase of ["安装、更新、卸载", "OAuth 登录", "列出模型", "生成或下载图片和视频", "阅读 JSON 结果", "不要用于 MCP 服务器配置"]) {
-    assert.match(descriptions.zh, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
-  }
-  assert.doesNotMatch(descriptions.zh, /[\u3040-\u309f\u30a0-\u30ff]|Use when|Do not use for MCP/);
-  for (const phrase of ["インストール、更新、アンインストール", "OAuth ログイン", "モデル一覧", "画像と動画の生成とダウンロード", "JSON 結果", "MCP サーバーの設定には使わない"]) {
-    assert.match(descriptions.ja, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
-  }
-  assert.doesNotMatch(descriptions.ja, /图片|视频|安装、更新|不要用于|Use when|listing models/);
-  assert.match(skills.en, /Reply to the user in the language they are using/);
-  assert.match(skills.en, /any other language: the English block/i);
-  assert.match(skills.zh, /用用户正在使用的语言回复/);
-  assert.match(skills.zh, /其他语言用英语这一段/);
-  assert.match(skills.ja, /ユーザーが使っている言語で返信する/);
-  assert.match(skills.ja, /それ以外の言語は英語の文面を使う/);
-  const uninstall = 'rm -rf "$AGENT_SKILLS_DIR/imagifly" "$AGENT_SKILLS_DIR/imagifly-zh" "$AGENT_SKILLS_DIR/imagifly-ja" "$AGENT_SKILLS_DIR/imagifly-cli"';
-  const sharedLines = ["npm install -g @imagifly/cli@latest", "npm uninstall -g @imagifly/cli", "imagifly auth logout", uninstall, installedCopy, leftoverRm];
+  assert.match(skill, /Reply in the language the user is writing/);
+  assert.match(skill, /用用户正在写的语言回复/);
+  assert.match(skill, /ユーザーが書いている言語で返す/);
+  assert.match(skill, /any other language: the English block/i);
+  const source = 'SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/imagifly/SKILL.md"';
+  const installedCopy = 'cp "$SKILL_SRC" "$AGENT_SKILLS_DIR/imagifly/SKILL.md"';
+  const leftoverRm =
+    'rm -rf "$AGENT_SKILLS_DIR/imagifly-zh" "$AGENT_SKILLS_DIR/imagifly-ja" "$AGENT_SKILLS_DIR/imagifly-cli" "$AGENT_SKILLS_DIR/en/imagifly" "$AGENT_SKILLS_DIR/zh/imagifly" "$AGENT_SKILLS_DIR/ja/imagifly"';
+  const uninstall =
+    'rm -rf "$AGENT_SKILLS_DIR/imagifly" "$AGENT_SKILLS_DIR/imagifly-zh" "$AGENT_SKILLS_DIR/imagifly-ja" "$AGENT_SKILLS_DIR/imagifly-cli" "$AGENT_SKILLS_DIR/en/imagifly" "$AGENT_SKILLS_DIR/zh/imagifly" "$AGENT_SKILLS_DIR/ja/imagifly"';
+  const sharedLines = [
+    "npm install -g @imagifly/cli@latest",
+    "npm uninstall -g @imagifly/cli",
+    "imagifly auth logout",
+    source,
+    installedCopy,
+    leftoverRm,
+    uninstall,
+  ];
   for (const line of sharedLines) {
     const pattern = new RegExp(line.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
     assert.match(readme, pattern);
     assert.match(setup, pattern);
-    for (const locale of locales) assert.match(skills[locale], pattern);
+    assert.match(skill, pattern);
   }
-  for (const locale of locales) {
-    const source = `SKILL_SRC="$(npm root -g)/@imagifly/cli/skills/${locale}/imagifly/SKILL.md"`;
-    const pattern = new RegExp(source.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
-    assert.match(readme, pattern);
-    assert.match(setup, pattern);
-  }
+  assert.doesNotMatch(setup, /skills\/(?:en|zh|ja)\/imagifly\//);
+  assert.doesNotMatch(readme, /skills\/(?:en|zh|ja)\/imagifly\//);
+  assert.doesNotMatch(setup, /\| 用户语言 \|/);
   assert.match(setup, /imagifly auth login --agent/);
-  assert.match(setup, /选择器里的名字始终是 `imagifly`/);
+  assert.match(setup, /^## English$/m);
+  assert.match(setup, /^## 简体中文$/m);
+  assert.match(setup, /^## 日本語$/m);
+  assert.match(setup, /选择器里的名字是 `imagifly`/);
   assert.doesNotMatch(setup, /skills\/imagifly-cli\//);
   assert.match(setup, /https:\/\/imagifly\.net\/cli\/setup\.md/);
   assert.doesNotMatch(setup, /https:\/\/imagifly\.net\/cli\/skill\.md/);
@@ -306,10 +296,10 @@ test("package metadata and docs", async () => {
   for (const line of successBlocks) {
     const pattern = new RegExp(line.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
     assert.match(setup, pattern);
-    for (const locale of locales) assert.match(skills[locale], pattern);
+    assert.match(skill, pattern);
   }
-  assert.match(setup, /以上都不是：用英语这一段/);
-  assert.doesNotMatch(skills.en, /do not translate it/i);
+  assert.match(setup, /英语，或者其他语言：用英语这一段/);
+  assert.doesNotMatch(skill, /do not translate it/i);
   assert.doesNotMatch(setup, /只需输出以下内容/);
   const license = await readFile("LICENSE", "utf8");
   assert.match(license, /MIT License/);
@@ -325,7 +315,7 @@ test("help and version stay off stdout", async () => {
   const version = await run(["--version"]);
   assert.equal(version.code, 0);
   assert.equal(version.stdout, "");
-  assert.match(version.stderr, /0\.1\.9/);
+  assert.match(version.stderr, /0\.1\.10/);
 
   const none = await run([]);
   assert.equal(none.code, 2);
