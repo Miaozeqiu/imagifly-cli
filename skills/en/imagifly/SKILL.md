@@ -1,18 +1,11 @@
 ---
 name: imagifly
-description: >-
-  Operate Imagifly image and video generation with the official CLI
-  (@imagifly/cli, binary imagifly). Use when installing, updating, or
-  uninstalling the CLI and this skill, signing in with OAuth, listing models,
-  generating or downloading images and videos, or reading JSON results. Do not
-  use for MCP server setup.
+description: Use the imagifly CLI to generate images and videos.
 ---
 
 # Imagifly
 
 Generate images and videos by shelling out to `imagifly`. Stdout is one JSON object. Progress and help are on stderr. Reply in English. Leave command names, flags, and JSON keys in English.
-
-This skill does not install or configure the Imagifly MCP server. MCP docs: https://imagifly.net/docs/agents.
 
 The picker name is `imagifly`. This file is the English skill. Copy it to `$AGENT_SKILLS_DIR/imagifly/SKILL.md`. Setup: https://imagifly.net/cli/setup.md
 
