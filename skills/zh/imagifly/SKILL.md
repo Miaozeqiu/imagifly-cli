@@ -103,10 +103,13 @@ imagifly +me
 | `imagifly auth logout` | 删除已保存的 token。环境变量仍可能还在（`envStillSet`） |
 | `imagifly auth status` | 查看当前生效的是哪份凭证 |
 | `imagifly +me` | 已登录的健康检查 |
+| `imagifly credits` | 当前积分余额，读 `credits` |
+| `imagifly checkin` | 领取今日签到。`image generate` 和 `video generate` 会先自动签到 |
 | `imagifly models image` | `GET /api/v1/images/models` |
 | `imagifly models video` | `GET /api/v1/videos/models`（不需要 key） |
 | `imagifly image generate --prompt "..." --model <id> [--ratio 16:9] [--quality high] [--resolution-tier 1k] [--steps 20] [--reference file.png] [--wait] [--poll-interval 3] [--timeout 180] [--out file]` | 提交图片。`--wait` 轮询 `GET /images/generations/{id}` |
-| `imagifly image get --id gen_... [--out file]` | 读取图片任务。`status` 为 `success` 时，`--out` 下载第一个 `imageUrl` |
+| `imagifly image history [--limit 20]` | 最近的生图记录。每条包含 `cost` 和 `imageUrls` |
+| `imagifly image get --id gen_... [--out file]` | 读取图片任务。`status` 为 `success` 时，`--out` 下载第一个 `imageUrl`。`generation.cost` 是本次扣除的积分 |
 | `imagifly video generate --prompt "..." --model <id> [--variant 2.5] [--workflow-format t2v] [--duration 5s] [--fps 24] [--size 1280x720] [--ratio 16:9] [--wait] [--poll-interval 5] [--timeout 900] [--out file]` | 提交视频。时长必须是该模型的 `durationOptions` 之一 |
 | `imagifly video get --id vid_... [--out file]` | 读取视频任务，并可下载第一个 `videoUrl` |
 
@@ -141,6 +144,8 @@ imagifly +me
 按 `error` 分支，不要按 `message`。`--wait` 之后任务变成 `failed` 时，退出码是 4，`error` 为 `"GENERATION_FAILED"`，并带有 `generation` 对象。失败任务的积分由 API 退回。不要编造重试接口。
 
 ## 积分
+
+用 `imagifly checkin` 领取今日签到。已登录的命令，包括 `image generate` 和 `video generate`，都会先自动签到。同一账号每天只能签到一次，网站、QQ 和 CLI 共用。用 `imagifly credits` 查看当前余额。提交、`image get`、`video get` 和 `image history` 里的 `generation.cost` 是该任务扣除的积分。失败的任务会退回积分。
 
 `POST` 返回 `202` 时积分已经预留。进程在任务完成前停了，用同一个 id 调 `image get` 或 `video get`。只有上次提交被拒绝（没有 id）或任务状态是 `failed` 时才重新提交。
 

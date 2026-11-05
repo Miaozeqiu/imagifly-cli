@@ -126,16 +126,19 @@ imagifly auth logout
 | Command | API |
 | --- | --- |
 | `imagifly +me` | `GET /images/models`, summarized as a count |
+| `imagifly credits` | `GET /credits` |
+| `imagifly checkin` | `POST /credits/checkin` |
 | `imagifly models image` | `GET /images/models` |
 | `imagifly models video` | `GET /videos/models` (public) |
 | `imagifly image generate --prompt "..." --model <id> [--ratio ...] [--wait] [--out path]` | `POST /images/generations` |
+| `imagifly image history [--limit 20]` | `GET /images/generations` |
 | `imagifly image get --id gen_... [--out path]` | `GET /images/generations/{id}` |
 | `imagifly video generate --prompt "..." --model <id> [--duration 5s] [--wait] [--out path]` | `POST /videos/generations` |
 | `imagifly video get --id vid_... [--out path]` | `GET /videos/generations/{id}` |
 
 `--wait` polls every `--poll-interval` seconds (2–5; default 3 for images, 5 for video) until `success` or `failed`. Image wait defaults to 180s; video wait defaults to 900s. `--out` on generate requires `--wait` and downloads the first `imageUrl` or `videoUrl`. The JSON result includes `outputPath`.
 
-There is no documented credits endpoint. `+me` is the lightweight authenticated check.
+`imagifly checkin` claims the daily credit grant. Image and video generate do this first, and so does every other signed-in command. The same account can claim once per day across the website, QQ, and the CLI. `imagifly credits` prints the signed-in account balance. `image history` lists recent image tasks, and each task includes `cost`. A submit that does not wait already returns `generation.cost`; `image get` and `--wait` return that same charge on the finished task. `+me` remains the lightweight authenticated check.
 
 Model ids, prices, durations, and ratios come from the live catalog. Video `durationOptions` are strings such as `5s`. Reference image files are sent as `{ "base64": "..." }`. Video reference URLs are sent as a string array (`referenceImages`, and the video/audio counterparts). Local video frames use `multipart/form-data` with the field names from the docs (`firstFrame`, `lastFrame`, `referenceImages`).
 

@@ -16,6 +16,19 @@ export function assertGenerationId(id: string): string {
   return trimmed;
 }
 
+export function parseHistoryLimit(value: string | undefined): number | undefined {
+  const raw = value?.trim() ?? "";
+  if (!raw) return undefined;
+  if (!/^\d+$/.test(raw)) {
+    throw badArgs("--limit must be an integer from 1 to 50.");
+  }
+  const limit = Number(raw);
+  if (limit < 1 || limit > 50) {
+    throw badArgs("--limit must be an integer from 1 to 50.");
+  }
+  return limit;
+}
+
 export function parsePollInterval(value: string | undefined, fallback: number): number {
   const raw = value?.trim() || String(fallback);
   const n = Number(raw);

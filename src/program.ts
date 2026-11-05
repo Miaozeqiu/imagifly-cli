@@ -2,8 +2,12 @@ import { createRequire } from "node:module";
 import { Command, CommanderError, type Command as CommandType } from "commander";
 import { login, logout, status } from "./commands/auth.js";
 import {
+  checkin,
+  credits,
+  ensureDailyCheckin,
   imageGenerate,
   imageGet,
+  imageHistory,
   imageModels,
   me,
   videoGenerate,
@@ -45,7 +49,8 @@ function mergedOpts(command: CommandType): Record<string, unknown> {
   return merged;
 }
 
-function run(fn: (opts: Record<string, unknown>) => Promise<void>) {
+function run(fn: (opts: Record<string, unknown>) => Promise<void>, options?: { checkin?: boolean }) {
+  const autoCheckin = options?.checkin !== false;
   return async function (this: CommandType): Promise<void> {
     const opts = mergedOpts(this);
     setInvocation({
@@ -53,6 +58,7 @@ function run(fn: (opts: Record<string, unknown>) => Promise<void>) {
       baseUrl: typeof opts.baseUrl === "string" ? opts.baseUrl : undefined,
     });
     try {
+      if (autoCheckin) await ensureDailyCheckin();
       await fn(opts);
     } finally {
       setInvocation({});
@@ -94,7 +100,10 @@ Examples:
   imagifly auth login --agent Cursor
   imagifly auth status
   imagifly +me
+  imagifly credits
+  imagifly checkin
   imagifly models image
+  imagifly image history
   imagifly image generate --model gpt-image-2 --prompt "A quiet tea shop" --ratio 16:9 --wait --out tea.png
 
 Exit codes: 0 success, 2 bad args, 3 unauthorized, 4 API or generation error, 1 unexpected.
@@ -139,6 +148,14 @@ Exit codes: 0 success, 2 bad args, 3 unauthorized, 4 API or generation error, 1 
     program.command("+me").description("Health check: image model count for the authenticated account"),
   ).action(run(() => me()));
 
+  addApiOptions(program.command("credits").description("GET /api/v1/credits")).action(
+    run(() => credits()),
+  );
+
+  addApiOptions(
+    program.command("checkin").description("POST /api/v1/credits/checkin. Image and video generate also do this first."),
+  ).action(run(() => checkin(), { checkin: false }));
+
   const models = program.command("models").description("List live image or video models");
   models.action(missing("Choose models image or models video."));
   addApiOptions(models.command("image").description("GET /api/v1/images/models")).action(
@@ -148,8 +165,8 @@ Exit codes: 0 success, 2 bad args, 3 unauthorized, 4 API or generation error, 1 
     models.command("video").description("GET /api/v1/videos/models (public; key optional)"),
   ).action(run(() => videoModels()));
 
-  const image = program.command("image").description("Submit and poll image generations");
-  image.action(missing("Choose image generate or image get."));
+  const image = program.command("image").description("Submit, list, and poll image generations");
+  image.action(missing("Choose image generate, image history, or image get."));
   addApiOptions(
     image
       .command("generate")
@@ -167,6 +184,13 @@ Exit codes: 0 success, 2 bad args, 3 unauthorized, 4 API or generation error, 1 
       .option("--timeout <seconds>", "Stop waiting after this many seconds", "180")
       .option("--out <path>", "With --wait, download the first imageUrl"),
   ).action(run((opts) => imageGenerate(opts)));
+
+  addApiOptions(
+    image
+      .command("history")
+      .description("GET /api/v1/images/generations")
+      .option("--limit <count>", "How many recent image tasks to return (1-50)"),
+  ).action(run((opts) => imageHistory(opts)));
 
   addApiOptions(
     image

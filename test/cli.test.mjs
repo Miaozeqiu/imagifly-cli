@@ -81,6 +81,7 @@ async function startApi() {
       hits.push({
         method: req.method,
         path: url.pathname,
+        search: url.search,
         authorization: req.headers.authorization ?? null,
         contentType: req.headers["content-type"] ?? null,
         body,
@@ -139,6 +140,14 @@ async function startApi() {
         send(401, { ok: false, error: "UNAUTHORIZED", message: "Missing API key." });
         return;
       }
+      if (req.method === "POST" && url.pathname === "/api/v1/credits/checkin") {
+        send(200, { ok: true, claimed: true, creditsGranted: 10, todayCreditsGranted: 10, credits: 58 });
+        return;
+      }
+      if (req.method === "GET" && url.pathname === "/api/v1/credits") {
+        send(200, { ok: true, credits: 48 });
+        return;
+      }
       if (url.pathname === "/api/v1/images/models") {
         send(200, {
           ok: true,
@@ -168,6 +177,24 @@ async function startApi() {
         });
         return;
       }
+      if (req.method === "GET" && url.pathname === "/api/v1/images/generations") {
+        send(200, {
+          ok: true,
+          generations: [
+            {
+              id: "gen_ok",
+              status: "success",
+              prompt: "a cat",
+              model: "gpt-image-2",
+              cost: 12,
+              createdAt: "2026-11-05T00:00:00.000Z",
+              error: null,
+              imageUrls: ["https://example.invalid/cat.png"],
+            },
+          ],
+        });
+        return;
+      }
       if (req.method === "GET" && url.pathname === "/api/v1/images/generations/gen_ok") {
         imagePolls += 1;
         if (imagePolls === 1) {
@@ -179,6 +206,7 @@ async function startApi() {
               id: "gen_ok",
               status: "success",
               error: null,
+              cost: 12,
               imageUrls: [`http://127.0.0.1:${server.address().port}/files/cat.png`],
             },
           });
@@ -317,6 +345,9 @@ test("help and version stay off stdout", async () => {
   assert.equal(help.code, 0);
   assert.equal(help.stdout, "");
   assert.match(help.stderr, /imagifly image generate/);
+  assert.match(help.stderr, /imagifly credits/);
+  assert.match(help.stderr, /imagifly checkin/);
+  assert.match(help.stderr, /imagifly image history/);
   assert.match(help.stderr, /\+me/);
 
   const version = await run(["--version"]);
@@ -538,6 +569,9 @@ test("api commands against a mock server", async () => {
     assert.equal(posted.ratio, "16:9");
     assert.equal(Buffer.from(posted.referenceImages[0].base64, "base64").toString(), "PNGDATA");
     assert.equal(submitted.stdout.includes("PNGDATA"), false);
+    const generationIndex = api.hits.findLastIndex((hit) => hit.method === "POST" && hit.path === "/api/v1/images/generations");
+    assert.equal(api.hits[generationIndex - 1]?.path, "/api/v1/credits/checkin");
+    assert.match(submitted.stderr, /checked in, \+10 credits/);
 
     const out = path.join(dir, "out.png");
     const waited = await run(
@@ -661,6 +695,34 @@ test("poll timeout exits 4", { timeout: 20_000 }, async () => {
     );
     assert.equal(timed.code, 4, timed.stderr);
     assert.equal(jsonStdout(timed).error, "POLL_TIMEOUT");
+
+    const checked = await run(["checkin"], {
+      env: { IMAGIFLY_API_KEY: KEY, IMAGIFLY_BASE_URL: api.base, IMAGIFLY_CONFIG_DIR: dir },
+    });
+    assert.equal(checked.code, 0, checked.stderr);
+    assert.equal(jsonStdout(checked).claimed, true);
+    assert.equal(jsonStdout(checked).creditsGranted, 10);
+    assert.doesNotMatch(checked.stderr, /checked in/);
+
+    const balance = await run(["credits"], {
+      env: { IMAGIFLY_API_KEY: KEY, IMAGIFLY_BASE_URL: api.base, IMAGIFLY_CONFIG_DIR: dir },
+    });
+    assert.equal(balance.code, 0, balance.stderr);
+    assert.equal(jsonStdout(balance).credits, 48);
+
+    const history = await run(["image", "history", "--limit", "1"], {
+      env: { IMAGIFLY_API_KEY: KEY, IMAGIFLY_BASE_URL: api.base, IMAGIFLY_CONFIG_DIR: dir },
+    });
+    assert.equal(history.code, 0, history.stderr);
+    assert.equal(jsonStdout(history).generations[0].cost, 12);
+    const historyHit = api.hits.filter((hit) => hit.path === "/api/v1/images/generations").at(-1);
+    assert.equal(historyHit.method, "GET");
+    assert.equal(historyHit.search, "?limit=1");
+
+    const badLimit = await run(["image", "history", "--limit", "0"], {
+      env: { IMAGIFLY_API_KEY: KEY, IMAGIFLY_BASE_URL: api.base, IMAGIFLY_CONFIG_DIR: dir },
+    });
+    assert.equal(badLimit.code, 2);
   } finally {
     await api.close();
     await rm(dir, { recursive: true, force: true });

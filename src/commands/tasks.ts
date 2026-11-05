@@ -1,5 +1,7 @@
 import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
+import { getInvocation } from "../context.js";
+import { resolveApiKey } from "../config.js";
 import { CliError, badArgs } from "../errors.js";
 import { apiRequest } from "../http.js";
 import {
@@ -13,7 +15,7 @@ import {
   withOutputPath,
 } from "../media.js";
 import { printJson, progress } from "../output.js";
-import { assignIf, parsePollInterval, parseSeed, parseSteps, parseTimeoutMs, requireText } from "../parse.js";
+import { assignIf, parseHistoryLimit, parsePollInterval, parseSeed, parseSteps, parseTimeoutMs, requireText } from "../parse.js";
 
 const IMAGE_POLL_DEFAULT = 3;
 const VIDEO_POLL_DEFAULT = 5;
@@ -46,6 +48,38 @@ export async function me(): Promise<void> {
     imageModelCount: models.length,
     models: ids.filter((id): id is string => Boolean(id)),
   });
+}
+
+export async function credits(): Promise<void> {
+  printJson(await apiRequest("/credits"));
+}
+
+export async function checkin(): Promise<void> {
+  printJson(await apiRequest("/credits/checkin", { method: "POST" }));
+}
+
+export async function ensureDailyCheckin(): Promise<void> {
+  const resolved = await resolveApiKey(getInvocation().apiKey);
+  if (!resolved) return;
+
+  try {
+    const body = expectObject(await apiRequest("/credits/checkin", { method: "POST" }), "Check-in");
+    if (body.claimed === true) {
+      const granted = typeof body.creditsGranted === "number" ? body.creditsGranted : 0;
+      progress(`checked in, +${granted} credits`);
+    }
+  } catch (err) {
+    if (err instanceof CliError && err.message.startsWith("HTTP 403")) {
+      progress("daily check-in is not available");
+      return;
+    }
+    throw err;
+  }
+}
+
+export async function imageHistory(opts: Flags): Promise<void> {
+  const limit = parseHistoryLimit(text(opts, "limit"));
+  printJson(await apiRequest(limit ? `/images/generations?limit=${limit}` : "/images/generations"));
 }
 
 export async function imageGenerate(opts: Flags): Promise<void> {

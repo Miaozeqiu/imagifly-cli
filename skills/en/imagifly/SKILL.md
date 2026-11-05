@@ -103,10 +103,13 @@ Do not include install narration, tarball or script audits, npm cache workaround
 | `imagifly auth logout` | Delete the saved token. Env may still be set (`envStillSet`) |
 | `imagifly auth status` | See which credential is active |
 | `imagifly +me` | Authenticated health check |
+| `imagifly credits` | Current credit balance. Read `credits` |
+| `imagifly checkin` | Claim today's check-in. `image generate` and `video generate` already do this first |
 | `imagifly models image` | `GET /api/v1/images/models` |
 | `imagifly models video` | `GET /api/v1/videos/models` (no key required) |
 | `imagifly image generate --prompt "..." --model <id> [--ratio 16:9] [--quality high] [--resolution-tier 1k] [--steps 20] [--reference file.png] [--wait] [--poll-interval 3] [--timeout 180] [--out file]` | Submit an image. `--wait` polls `GET /images/generations/{id}` |
-| `imagifly image get --id gen_... [--out file]` | Read an image task. `--out` downloads the first `imageUrl` when `status` is `success` |
+| `imagifly image history [--limit 20]` | Recent image tasks. Each item includes `cost` and `imageUrls` |
+| `imagifly image get --id gen_... [--out file]` | Read an image task. `--out` downloads the first `imageUrl` when `status` is `success`. `generation.cost` is the charge |
 | `imagifly video generate --prompt "..." --model <id> [--variant 2.5] [--workflow-format t2v] [--duration 5s] [--fps 24] [--size 1280x720] [--ratio 16:9] [--wait] [--poll-interval 5] [--timeout 900] [--out file]` | Submit a video. Duration must match that model's `durationOptions` |
 | `imagifly video get --id vid_... [--out file]` | Read a video task and optionally download the first `videoUrl` |
 
@@ -141,6 +144,8 @@ Failure matches the API envelope when Imagifly returned one:
 Branch on `error`, not on `message`. After `--wait`, a task that finishes `failed` is exit 4 with `error: "GENERATION_FAILED"` and the `generation` object. Credits for a failed task are returned by the API. Do not invent a retry endpoint.
 
 ## Credits
+
+Run `imagifly checkin` to claim today's grant. Signed-in commands, including `image generate` and `video generate`, claim it first. One claim per account per day, shared with the website and QQ. Run `imagifly credits` for the current balance. `generation.cost` on submit, `image get`, `video get`, and `image history` is the charge for that task. A failed task is refunded.
 
 `POST` returning `202` already reserved credits. If the process stops before the task finishes, poll the same id with `image get` or `video get`. Submit again only when the previous submit was rejected (no id) or the task status is `failed`.
 
