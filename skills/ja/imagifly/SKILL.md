@@ -1,14 +1,11 @@
 ---
 name: imagifly
-description: >-
-  公式 CLI（npm パッケージ @imagifly/cli、コマンド imagifly）で画像と動画を生成する。CLI とこのスキルのインストール、更新、アンインストール、OAuth ログイン、モデル一覧、画像と動画の生成とダウンロード、JSON 結果の確認に使う。MCP サーバーの設定には使わない。
+description: imagifly コマンドラインで画像と動画を生成する。
 ---
 
 # Imagifly
 
 `imagifly` をシェルから呼び出して画像と動画を生成する。標準出力は JSON オブジェクトひとつ。進捗とヘルプは stderr。日本語で返信する。コマンド名、フラグ、JSON のキーは英語のままにする。
-
-このスキルは Imagifly の MCP サーバーをインストールも設定もしない。MCP のドキュメント: https://imagifly.net/docs/agents
 
 ピッカーの名前は `imagifly`。これは日本語のスキル。`$AGENT_SKILLS_DIR/imagifly/SKILL.md` にコピーする。手順: https://imagifly.net/cli/setup.ja.md
 

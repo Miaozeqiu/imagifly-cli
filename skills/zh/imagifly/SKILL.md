@@ -1,14 +1,11 @@
 ---
 name: imagifly
-description: >-
-  用官方命令行生成图片和视频（npm 包 @imagifly/cli，命令 imagifly）。用于安装、更新、卸载命令行和本技能，OAuth 登录，列出模型，生成或下载图片和视频，阅读 JSON 结果。不要用于 MCP 服务器配置。
+description: 用 imagifly 命令行生成图片和视频。
 ---
 
 # Imagifly
 
 通过 shell 调用 `imagifly` 生成图片和视频。标准输出是一个 JSON 对象。进度和帮助写在 stderr。用简体中文回复；命令名、flag、JSON 字段保持英文。
-
-本技能不安装、也不配置 Imagifly MCP 服务器。MCP 文档：https://imagifly.net/docs/agents
 
 选择器里的名字是 `imagifly`。这是简体中文 skill。把它复制到 `$AGENT_SKILLS_DIR/imagifly/SKILL.md`。安装说明：https://imagifly.net/cli/setup.zh.md
 

@@ -52,14 +52,13 @@ async function waitForMatch(child, readStderr, pattern) {
   throw new Error(`CLI did not match ${pattern}: ${readStderr()}`);
 }
 
-function foldedDescription(markdown) {
+function skillDescription(markdown) {
   const frontmatter = markdown.match(/^---\r?\n([\s\S]*?)\r?\n---/);
   assert.ok(frontmatter, "skill frontmatter");
-  const description = frontmatter[1].match(/^description: >-\n([\s\S]+)/m);
-  assert.ok(description, "folded description");
-  const lines = description[1].split("\n");
-  assert.ok(lines.every((line) => /^ {2}\S/.test(line)), description[1]);
-  return lines.map((line) => line.slice(2).trimEnd()).join(" ");
+  assert.doesNotMatch(frontmatter[1], /^description: >-/m);
+  const description = frontmatter[1].match(/^description: ([^\n]+)$/m);
+  assert.ok(description, "single-line description");
+  return description[1];
 }
 
 function jsonStdout(result) {
@@ -249,7 +248,7 @@ test("package metadata and docs", async () => {
     skills[locale] = await readFile(`skills/${locale}/imagifly/SKILL.md`, "utf8");
   }
   const descriptions = Object.fromEntries(
-    ["en", "zh", "ja"].map((locale) => [locale, foldedDescription(skills[locale])]),
+    ["en", "zh", "ja"].map((locale) => [locale, skillDescription(skills[locale])]),
   );
   const installedCopy = 'cp "$SKILL_SRC" "$AGENT_SKILLS_DIR/imagifly/SKILL.md"';
   const leftoverRm =
@@ -261,17 +260,10 @@ test("package metadata and docs", async () => {
     zh: "https://imagifly.net/cli/setup.zh.md",
     ja: "https://imagifly.net/cli/setup.ja.md",
   };
-  const descriptionPhrases = {
-    en: [
-      "installing, updating, or uninstalling",
-      "signing in with OAuth",
-      "listing models",
-      "generating or downloading images and videos",
-      "reading JSON results",
-      "Do not use for MCP server setup",
-    ],
-    zh: ["安装、更新、卸载", "OAuth 登录", "列出模型", "生成或下载图片和视频", "阅读 JSON 结果", "不要用于 MCP 服务器配置"],
-    ja: ["インストール、更新、アンインストール", "OAuth ログイン", "モデル一覧", "画像と動画の生成とダウンロード", "JSON 結果の確認", "MCP サーバーの設定には使わない"],
+  const expectedDescriptions = {
+    en: "Use the imagifly CLI to generate images and videos.",
+    zh: "用 imagifly 命令行生成图片和视频。",
+    ja: "imagifly コマンドラインで画像と動画を生成する。",
   };
   const successLine = {
     en: "Imagifly CLI is installed and signed in. You can generate images and videos.",
@@ -288,10 +280,8 @@ test("package metadata and docs", async () => {
     assert.doesNotMatch(skill, /skills\/imagifly-cli\//);
     assert.doesNotMatch(skill, /claude mcp add|mcp\.json/);
     assert.match(skill, /npm install -g @imagifly\/cli/);
-    assert.ok(descriptions[locale].length > 0 && descriptions[locale].length <= 1024, descriptions[locale].length);
-    for (const phrase of descriptionPhrases[locale]) {
-      assert.match(descriptions[locale], new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
-    }
+    assert.equal(descriptions[locale], expectedDescriptions[locale]);
+    assert.doesNotMatch(skill, /MCP|官方命令行|公式 CLI|official CLI/);
     for (const line of [source, installedCopy, leftoverRm, uninstall, "npm install -g @imagifly/cli@latest", "imagifly auth logout"]) {
       const pattern = new RegExp(line.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
       assert.match(skill, pattern);
@@ -332,7 +322,7 @@ test("help and version stay off stdout", async () => {
   const version = await run(["--version"]);
   assert.equal(version.code, 0);
   assert.equal(version.stdout, "");
-  assert.match(version.stderr, /0\.1\.12/);
+  assert.match(version.stderr, /0\.1\.13/);
 
   const none = await run([]);
   assert.equal(none.code, 2);
