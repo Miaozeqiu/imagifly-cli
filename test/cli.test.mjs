@@ -353,7 +353,7 @@ test("help and version stay off stdout", async () => {
   const version = await run(["--version"]);
   assert.equal(version.code, 0);
   assert.equal(version.stdout, "");
-  assert.match(version.stderr, /0\.1\.13/);
+  assert.match(version.stderr, /0\.1\.14/);
 
   const none = await run([]);
   assert.equal(none.code, 2);
