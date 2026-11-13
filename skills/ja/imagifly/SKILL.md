@@ -104,7 +104,6 @@ imagifly +me
 | `imagifly auth status` | どの認証情報が有効かを見る |
 | `imagifly +me` | ログイン済みのヘルスチェック |
 | `imagifly credits` | 現在のクレジット残高。`credits` を読む |
-| `imagifly checkin` | 今日のチェックインを受け取る。`image generate` と `video generate` は先に自動で行う |
 | `imagifly models image` | `GET /api/v1/images/models` |
 | `imagifly models video` | `GET /api/v1/videos/models`（キー不要） |
 | `imagifly image generate --prompt "..." --model <id> [--ratio 16:9] [--quality high] [--resolution-tier 1k] [--steps 20] [--reference file.png] [--wait] [--poll-interval 3] [--timeout 180] [--out file]` | 画像を送る。`--wait` は `GET /images/generations/{id}` をポーリングする |
@@ -145,7 +144,7 @@ Imagifly が封筒を返した失敗は、その形のまま:
 
 ## クレジット
 
-`imagifly checkin` で今日の付与を受け取る。ログイン済みのコマンド（`image generate` と `video generate` を含む）は先に自動でチェックインする。同じアカウントは 1 日 1 回で、サイト、QQ、CLI で共有する。`imagifly credits` で現在の残高を見る。送信、`image get`、`video get`、`image history` の `generation.cost` はそのタスクで消費したクレジット。失敗したタスクは返金される。
+`imagifly credits` で現在の残高を見る。送信、`image get`、`video get`、`image history` の `generation.cost` はそのタスクで消費したクレジット。失敗したタスクは返金される。
 
 `POST` が `202` を返した時点でクレジットは予約済み。プロセスがタスク完了前に止まったら、同じ id を `image get` または `video get` で見る。再送してよいのは、直前の送信が拒否された（id が無い）か、タスクの状態が `failed` のときだけ。
 

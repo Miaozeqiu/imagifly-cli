@@ -104,7 +104,6 @@ Do not include install narration, tarball or script audits, npm cache workaround
 | `imagifly auth status` | See which credential is active |
 | `imagifly +me` | Authenticated health check |
 | `imagifly credits` | Current credit balance. Read `credits` |
-| `imagifly checkin` | Claim today's check-in. `image generate` and `video generate` already do this first |
 | `imagifly models image` | `GET /api/v1/images/models` |
 | `imagifly models video` | `GET /api/v1/videos/models` (no key required) |
 | `imagifly image generate --prompt "..." --model <id> [--ratio 16:9] [--quality high] [--resolution-tier 1k] [--steps 20] [--reference file.png] [--wait] [--poll-interval 3] [--timeout 180] [--out file]` | Submit an image. `--wait` polls `GET /images/generations/{id}` |
@@ -145,7 +144,7 @@ Branch on `error`, not on `message`. After `--wait`, a task that finishes `faile
 
 ## Credits
 
-Run `imagifly checkin` to claim today's grant. Signed-in commands, including `image generate` and `video generate`, claim it first. One claim per account per day, shared with the website and QQ. Run `imagifly credits` for the current balance. `generation.cost` on submit, `image get`, `video get`, and `image history` is the charge for that task. A failed task is refunded.
+Run `imagifly credits` for the current balance. `generation.cost` on submit, `image get`, `video get`, and `image history` is the charge for that task. A failed task is refunded.
 
 `POST` returning `202` already reserved credits. If the process stops before the task finishes, poll the same id with `image get` or `video get`. Submit again only when the previous submit was rejected (no id) or the task status is `failed`.
 
