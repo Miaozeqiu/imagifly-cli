@@ -2,9 +2,7 @@ import { createRequire } from "node:module";
 import { Command, CommanderError, type Command as CommandType } from "commander";
 import { login, logout, status } from "./commands/auth.js";
 import {
-  checkin,
   credits,
-  ensureDailyCheckin,
   imageGenerate,
   imageGet,
   imageHistory,
@@ -49,8 +47,7 @@ function mergedOpts(command: CommandType): Record<string, unknown> {
   return merged;
 }
 
-function run(fn: (opts: Record<string, unknown>) => Promise<void>, options?: { checkin?: boolean }) {
-  const autoCheckin = options?.checkin !== false;
+function run(fn: (opts: Record<string, unknown>) => Promise<void>) {
   return async function (this: CommandType): Promise<void> {
     const opts = mergedOpts(this);
     setInvocation({
@@ -58,7 +55,6 @@ function run(fn: (opts: Record<string, unknown>) => Promise<void>, options?: { c
       baseUrl: typeof opts.baseUrl === "string" ? opts.baseUrl : undefined,
     });
     try {
-      if (autoCheckin) await ensureDailyCheckin();
       await fn(opts);
     } finally {
       setInvocation({});
@@ -101,7 +97,6 @@ Examples:
   imagifly auth status
   imagifly +me
   imagifly credits
-  imagifly checkin
   imagifly models image
   imagifly image history
   imagifly image generate --model gpt-image-2 --prompt "A quiet tea shop" --ratio 16:9 --wait --out tea.png
@@ -151,10 +146,6 @@ Exit codes: 0 success, 2 bad args, 3 unauthorized, 4 API or generation error, 1 
   addApiOptions(program.command("credits").description("GET /api/v1/credits")).action(
     run(() => credits()),
   );
-
-  addApiOptions(
-    program.command("checkin").description("POST /api/v1/credits/checkin. Image and video generate also do this first."),
-  ).action(run(() => checkin(), { checkin: false }));
 
   const models = program.command("models").description("List live image or video models");
   models.action(missing("Choose models image or models video."));

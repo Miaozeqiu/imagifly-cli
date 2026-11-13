@@ -1,7 +1,5 @@
 import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
-import { getInvocation } from "../context.js";
-import { resolveApiKey } from "../config.js";
 import { CliError, badArgs } from "../errors.js";
 import { apiRequest } from "../http.js";
 import {
@@ -52,29 +50,6 @@ export async function me(): Promise<void> {
 
 export async function credits(): Promise<void> {
   printJson(await apiRequest("/credits"));
-}
-
-export async function checkin(): Promise<void> {
-  printJson(await apiRequest("/credits/checkin", { method: "POST" }));
-}
-
-export async function ensureDailyCheckin(): Promise<void> {
-  const resolved = await resolveApiKey(getInvocation().apiKey);
-  if (!resolved) return;
-
-  try {
-    const body = expectObject(await apiRequest("/credits/checkin", { method: "POST" }), "Check-in");
-    if (body.claimed === true) {
-      const granted = typeof body.creditsGranted === "number" ? body.creditsGranted : 0;
-      progress(`checked in, +${granted} credits`);
-    }
-  } catch (err) {
-    if (err instanceof CliError && err.message.startsWith("HTTP 403")) {
-      progress("daily check-in is not available");
-      return;
-    }
-    throw err;
-  }
 }
 
 export async function imageHistory(opts: Flags): Promise<void> {

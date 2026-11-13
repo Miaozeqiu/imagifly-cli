@@ -104,7 +104,6 @@ imagifly +me
 | `imagifly auth status` | 查看当前生效的是哪份凭证 |
 | `imagifly +me` | 已登录的健康检查 |
 | `imagifly credits` | 当前积分余额，读 `credits` |
-| `imagifly checkin` | 领取今日签到。`image generate` 和 `video generate` 会先自动签到 |
 | `imagifly models image` | `GET /api/v1/images/models` |
 | `imagifly models video` | `GET /api/v1/videos/models`（不需要 key） |
 | `imagifly image generate --prompt "..." --model <id> [--ratio 16:9] [--quality high] [--resolution-tier 1k] [--steps 20] [--reference file.png] [--wait] [--poll-interval 3] [--timeout 180] [--out file]` | 提交图片。`--wait` 轮询 `GET /images/generations/{id}` |
@@ -145,7 +144,7 @@ imagifly +me
 
 ## 积分
 
-用 `imagifly checkin` 领取今日签到。已登录的命令，包括 `image generate` 和 `video generate`，都会先自动签到。同一账号每天只能签到一次，网站、QQ 和 CLI 共用。用 `imagifly credits` 查看当前余额。提交、`image get`、`video get` 和 `image history` 里的 `generation.cost` 是该任务扣除的积分。失败的任务会退回积分。
+用 `imagifly credits` 查看当前余额。提交、`image get`、`video get` 和 `image history` 里的 `generation.cost` 是该任务扣除的积分。失败的任务会退回积分。
 
 `POST` 返回 `202` 时积分已经预留。进程在任务完成前停了，用同一个 id 调 `image get` 或 `video get`。只有上次提交被拒绝（没有 id）或任务状态是 `failed` 时才重新提交。
 
